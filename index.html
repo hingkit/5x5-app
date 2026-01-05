@@ -5,16 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Protocol v17 Web</title>
+    <title>Protocol v18 Unbreakable</title>
     <style>
-        /* --- PRO ATHLETE THEME (Navy/Copper) --- */
+        /* --- PRO ATHLETE THEME --- */
         :root { 
             --bg: #0f172a;        /* Midnight Navy */
             --card: #1e293b;      /* Dark Slate */
             --text: #f8fafc;      /* Ice White */
             --sub: #94a3b8;       /* Cool Grey */
             --active: #3b82f6;    /* Electric Blue */
-            --copper: #d97706;    /* Victory Copper */
             --success: #10b981;   /* Green */
             --danger: #ef4444;    /* Red */
         }
@@ -22,7 +21,7 @@
         body { 
             font-family: -apple-system, system-ui, sans-serif; 
             background: var(--bg); color: var(--text); 
-            margin: 0; padding: 20px; padding-bottom: 260px; 
+            margin: 0; padding: 20px; padding-bottom: 200px; 
             text-align: center; 
             -webkit-tap-highlight-color: transparent;
         }
@@ -44,7 +43,7 @@
         #sync-status { font-size: 0.7rem; color: var(--sub); text-align: right; margin-top: 5px; height: 10px; opacity: 0; transition: opacity 0.5s; }
 
         /* CARDS */
-        #list { display: flex; flex-direction: column; gap: 20px; }
+        #list { display: flex; flex-direction: column; gap: 20px; padding-bottom: 100px; }
         .card { 
             background: var(--card); border-radius: 20px; padding: 24px; 
             border: 2px solid transparent; transition: 0.3s ease; 
@@ -135,19 +134,20 @@
     // --- CONFIGURATION ---
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQa2DcUfTAzmszUb02lB4dgneZvZpurgZszpl_NReTCD6ExcIrPtm_Y_yHhuviilqU/exec"; 
 
-    var WORKOUT_A = [
+    // --- DEFAULT DATA (Fallback) ---
+    const DEFAULT_A = [
         { name: "Squat", w: 75, sets: 5, reps: 5, cue: "Knees out. Chest up.", rest: "Walk it off." },
         { name: "Bench Press", w: 85, sets: 5, reps: 5, cue: "Leg drive. Explode up.", rest: "Open chest." },
         { name: "Barbell Row", w: 65, sets: 5, reps: 5, cue: "Flat back. Pull to hips.", rest: "Relax back." }
     ];
 
-    var WORKOUT_B = [
+    const DEFAULT_B = [
         { name: "Squat", w: 75, sets: 5, reps: 5, cue: "Knees out. Chest up.", rest: "Walk it off." },
         { name: "Overhead Press", w: 45, sets: 5, reps: 5, cue: "Squeeze glutes. Head through.", rest: "Shake shoulders." },
         { name: "Deadlift", w: 135, sets: 1, reps: 5, cue: "Drag bar up. Hips through.", rest: "Deep breaths." }
     ];
 
-    var CURRENT_ROUTINE = WORKOUT_A; 
+    var CURRENT_ROUTINE = JSON.parse(JSON.stringify(DEFAULT_A));
     var CURRENT_TYPE = 'A';
 
     // --- STATE ---
@@ -159,21 +159,85 @@
     var liftInt = null;
     var restInt = null;
 
-    // --- AUTO START ---
-    window.addEventListener('load', function() {
-        loadLocal(); // Load saved weights
-        renderList();
+    // --- CRASH-PROOF INIT ---
+    // This runs immediately. No waiting.
+    try {
+        var savedA = localStorage.getItem('protocol_v18_A');
+        var savedB = localStorage.getItem('protocol_v18_B');
         
-        setInterval(function() {
-            sessionSecs++;
-            var m = Math.floor(sessionSecs/60).toString().padStart(2,'0');
-            var s = (sessionSecs%60).toString().padStart(2,'0');
-            document.getElementById('session-timer').innerText = m + ":" + s;
-        }, 1000);
+        if (savedA && savedA !== "undefined" && savedA !== "null") {
+            // Found valid save, parse it
+            var parsedA = JSON.parse(savedA);
+            if(parsedA.length > 0) CURRENT_ROUTINE = parsedA;
+        } 
+    } catch (e) {
+        console.log("Save corrupted. Resetting to defaults.");
+        localStorage.clear();
+    }
 
-        highlightCard(0);
-        updateBtn(0);
-    });
+    // Force Render Immediately
+    renderList();
+    highlightCard(0);
+    updateBtn(0);
+
+    // Start Clock
+    setInterval(function() {
+        sessionSecs++;
+        var m = Math.floor(sessionSecs/60).toString().padStart(2,'0');
+        var s = (sessionSecs%60).toString().padStart(2,'0');
+        var el = document.getElementById('session-timer');
+        if(el) el.innerText = m + ":" + s;
+    }, 1000);
+
+
+    // --- RENDER ENGINE ---
+    function renderList() {
+        var list = document.getElementById('list');
+        if(!list) return;
+        list.innerHTML = "";
+        
+        for(var i=0; i<CURRENT_ROUTINE.length; i++) {
+            var ex = CURRENT_ROUTINE[i];
+            // Ensure properties exist to prevent crash
+            ex.totalVol = ex.totalVol || 0;
+            ex.totalTime = ex.totalTime || 0;
+
+            var bars = "";
+            for(var b=0; b<ex.sets; b++) {
+                bars += '<div class="seg" id="seg_'+i+'_'+b+'"></div>';
+            }
+
+            list.innerHTML += `
+                <div class="card" id="card_${i}">
+                    <div class="controls-row">
+                        <div class="ex-name">${ex.name}</div>
+                        <div class="adjuster-group">
+                            <div class="adj-ui">
+                                <span class="adj-label">LBS</span>
+                                <button class="btn-adj" onclick="modWeight(${i}, -5)">−</button>
+                                <span class="val-display" id="w_${i}">${ex.w}</span>
+                                <button class="btn-adj" onclick="modWeight(${i}, 5)">+</button>
+                            </div>
+                            <div class="adj-ui">
+                                <span class="adj-label">REPS</span>
+                                <button class="btn-adj" onclick="modReps(${i}, -1)">−</button>
+                                <span class="val-display" id="r_${i}">${ex.reps}</span>
+                                <button class="btn-adj" onclick="modReps(${i}, 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-row">
+                        <span>VOL <span class="stat-val" id="vol_${i}">${ex.totalVol.toLocaleString()}</span></span>
+                        <span>TIME <span class="stat-val" id="time_${i}">${ex.totalTime}s</span></span>
+                    </div>
+
+                    <div class="track">${bars}</div>
+                    <div class="set-logs" id="logs_${i}"></div>
+                </div>
+            `;
+        }
+    }
 
     // --- LOGIC ---
     function handleAction() {
@@ -264,11 +328,23 @@
         if(confirm("Switch workout? Progress will reset.")) {
             CURRENT_TYPE = type;
             if(type === 'A') {
-                CURRENT_ROUTINE = WORKOUT_A;
+                CURRENT_ROUTINE = JSON.parse(JSON.stringify(DEFAULT_A)); // Load Fresh
+                // Try load saved
+                try {
+                     var saved = localStorage.getItem('protocol_v18_A');
+                     if(saved) CURRENT_ROUTINE = JSON.parse(saved);
+                } catch(e) {}
+                
                 document.getElementById('btnA').classList.add('active');
                 document.getElementById('btnB').classList.remove('active');
             } else {
-                CURRENT_ROUTINE = WORKOUT_B;
+                CURRENT_ROUTINE = JSON.parse(JSON.stringify(DEFAULT_B)); // Load Fresh
+                // Try load saved
+                try {
+                     var saved = localStorage.getItem('protocol_v18_B');
+                     if(saved) CURRENT_ROUTINE = JSON.parse(saved);
+                } catch(e) {}
+
                 document.getElementById('btnB').classList.add('active');
                 document.getElementById('btnA').classList.remove('active');
             }
@@ -287,6 +363,7 @@
 
     function setBtn(main, sub, cls, iconKey) {
         var btn = document.getElementById('actionBtn');
+        if(!btn) return;
         btn.className = cls || "";
         document.getElementById('btnMain').innerText = main;
         document.getElementById('btnSub').innerText = sub;
@@ -311,29 +388,24 @@
         var cards = document.querySelectorAll('.card');
         for(var i=0; i<cards.length; i++) cards[i].classList.remove('active');
         var c = document.getElementById('card_'+idx);
-        c.classList.add('active');
-        c.scrollIntoView({behavior:'smooth', block:'center'});
+        if(c) {
+            c.classList.add('active');
+            c.scrollIntoView({behavior:'smooth', block:'center'});
+        }
     }
 
-    // --- CLOUD SYNC ---
+    // --- DATA SAVING ---
     function saveLocal() {
-        localStorage.setItem('protocol_v17_A', JSON.stringify(WORKOUT_A));
-        localStorage.setItem('protocol_v17_B', JSON.stringify(WORKOUT_B));
-    }
-
-    function loadLocal() {
-        var a = localStorage.getItem('protocol_v17_A');
-        var b = localStorage.getItem('protocol_v17_B');
-        if(a) WORKOUT_A = JSON.parse(a);
-        if(b) WORKOUT_B = JSON.parse(b);
-        if(CURRENT_TYPE === 'A') CURRENT_ROUTINE = WORKOUT_A;
-        else CURRENT_ROUTINE = WORKOUT_B;
+        if(CURRENT_TYPE === 'A') localStorage.setItem('protocol_v18_A', JSON.stringify(CURRENT_ROUTINE));
+        else localStorage.setItem('protocol_v18_B', JSON.stringify(CURRENT_ROUTINE));
     }
 
     function sendToCloud(exName, weight, reps, time) {
         var status = document.getElementById('sync-status');
-        status.style.opacity = '1';
-        status.innerText = "Syncing...";
+        if(status) {
+            status.style.opacity = '1';
+            status.innerText = "Syncing...";
+        }
 
         var payload = {
             timestamp: new Date().toISOString(),
@@ -350,10 +422,12 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         }).then(() => {
-            status.innerText = "Synced";
-            setTimeout(() => { status.style.opacity = '0'; }, 2000);
+            if(status) {
+                status.innerText = "Synced";
+                setTimeout(() => { status.style.opacity = '0'; }, 2000);
+            }
         }).catch(() => {
-            status.innerText = "Offline";
+            if(status) status.innerText = "Offline";
         });
     }
 </script>
