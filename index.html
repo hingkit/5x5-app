@@ -3,99 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Protocol Hybrid</title>
+    <title>Protocol v9 Debug</title>
     <style>
-        :root { --bg: #f2f2f7; --card: #ffffff; --text: #000; --sub: #8e8e93; --accent: #007aff; --active: #ffcc00; --success: #34c759; --rest: #1c1c1e; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 20px; padding-bottom: 160px; margin: 0; }
-
-        /* HEADER */
-        header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-        h1 { font-size: 2rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
-        #sessionTimer { font-variant-numeric: tabular-nums; font-size: 1.2rem; font-weight: 600; color: var(--sub); background: #e5e5ea; padding: 4px 10px; border-radius: 8px; }
-        p.subtitle { color: var(--sub); font-size: 0.9rem; margin-top: 5px; font-weight: 500; }
-        .version-badge { background: #007aff; color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; vertical-align: middle; margin-left: 8px; }
-
-        /* CARDS */
-        .card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: 0.3s; border: 2px solid transparent; }
-        .card.current-focus { border-color: var(--accent); transform: scale(1.02); box-shadow: 0 10px 20px rgba(0,122,255,0.15); } 
+        body { background: #f2f2f7; color: #000; padding: 20px; font-family: -apple-system, system-ui, sans-serif; padding-bottom: 200px; }
         
-        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .ex-name { font-size: 1.1rem; font-weight: 700; }
-        
-        .weight-ui { display: flex; align-items: center; background: var(--bg); border-radius: 10px; padding: 4px; gap: 4px; }
-        .adj-btn { width: 32px; height: 32px; border: none; background: #fff; border-radius: 7px; font-size: 1.2rem; font-weight: 600; color: var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        input.weight-val { width: 50px; background: transparent; border: none; font-size: 1.2rem; font-weight: 700; text-align: center; color: var(--text); padding: 0; }
-        
-        /* BUBBLES */
-        .sets-row { display: flex; gap: 8px; }
-        .bubble { flex: 1; height: 36px; border-radius: 8px; border: 2px solid #e5e5ea; cursor: pointer; transition: 0.2s; position: relative; }
-        .bubble.active { background: var(--active); border-color: var(--active); animation: pulse 1.5s infinite; }
-        .bubble.done { background: var(--success); border-color: var(--success); }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        /* DEBUG BOXES */
+        #error-box { display: none; background: #ff3b30; color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: bold; }
+        #status-log { font-family: monospace; font-size: 0.75rem; color: #666; background: #eee; padding: 10px; border-radius: 8px; margin-top: 20px; height: 100px; overflow-y: scroll; }
 
-        /* MEGA BUTTON FOOTER */
-        .fab-container { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: rgba(242,242,247,0.95); backdrop-filter: blur(10px); border-top: 1px solid #d1d1d6; z-index: 100; }
+        /* APP UI */
+        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .row { display: flex; justify-content: space-between; align-items: center; }
+        .bubbles { display: flex; gap: 5px; margin-top: 10px; }
+        .bubble { height: 30px; flex: 1; background: #eee; border-radius: 5px; border: 1px solid #ddd; }
+        .bubble.active { background: #ffcc00; }
+        .bubble.done { background: #34c759; }
         
-        #megaBtn { width: 100%; height: 75px; border-radius: 16px; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
-        
-        #btnMain { font-size: 1.3rem; font-weight: 800; line-height: 1.1; }
-        #btnSub { font-size: 0.85rem; font-weight: 500; opacity: 0.8; }
-
-        /* Button States */
-        .state-ready { background: #000; color: #fff; }
-        .state-lift { background: var(--active); color: #000; }
-        .state-rest { background: var(--rest); color: #fff; }
-        .state-finish { background: var(--success); color: #fff; }
-
+        button#megaBtn { position: fixed; bottom: 20px; left: 20px; right: 20px; height: 70px; width: calc(100% - 40px); background: #000; color: white; border: none; border-radius: 16px; font-size: 1.2rem; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 100; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div>
-            <h1 id="workoutTitle">Workout A <span class="version-badge">v8.1</span></h1>
-            <p class="subtitle" id="nextWorkoutMsg">Next: Workout B</p>
-        </div>
-        <div id="sessionTimer">00:00</div>
-    </header>
+    <div id="error-box"></div>
 
+    <h1>Workout A <span style="font-size:0.8rem; background:blue; color:white; padding:2px 6px; border-radius:4px;">v9.0</span></h1>
+    
     <div id="exerciseList"></div>
+    
+    <div id="status-log">Initializing...</div>
 
-    <div class="fab-container">
-        <button id="megaBtn" class="state-ready" onclick="handleMegaButton()">
-            <span id="btnMain">Start Workout</span>
-            <span id="btnSub">Tap to begin Set 1</span>
-        </button>
-    </div>
+    <button id="megaBtn" onclick="handleAction()">Start Workout</button>
 
 <script>
-    // --- CONFIGURATION ---
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQa2DcUfTAzmszUb02lB4dgneZvZpurgZszpl_NReTCD6ExcIrPtm_Y_yHhuviilqU/exec";
+    // --- 1. ERROR TRAPPING (Must be first) ---
+    function log(msg) {
+        const el = document.getElementById('status-log');
+        el.innerHTML += "<div>> " + msg + "</div>";
+        el.scrollTop = el.scrollHeight;
+        console.log(msg);
+    }
 
+    window.onerror = function(message, source, lineno, colno, error) {
+        const box = document.getElementById('error-box');
+        box.style.display = 'block';
+        box.innerHTML = `⚠️ CRASH DETECTED:<br>${message}<br>Line: ${lineno}`;
+        return false;
+    };
+
+    // --- 2. DATA ---
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQa2DcUfTAzmszUb02lB4dgneZvZpurgZszpl_NReTCD6ExcIrPtm_Y_yHhuviilqU/exec";
+    
     const config = {
         A: [
-            { name: "Squat", sets: 5, type: "rack", id: "squat" },
-            { name: "Bench Press", sets: 5, type: "rack", id: "bench" },
-            { name: "Barbell Row", sets: 5, type: "rack", id: "row" },
-            { name: "Face Pulls", sets: 3, type: "pulley", id: "facepull" },
-            { name: "Tri Pushdown", sets: 3, type: "pulley", id: "tricep" }
+            { name: "Squat", sets: 5, id: "squat" },
+            { name: "Bench Press", sets: 5, id: "bench" },
+            { name: "Barbell Row", sets: 5, id: "row" },
+            { name: "Face Pulls", sets: 3, id: "facepull" },
+            { name: "Tri Pushdown", sets: 3, id: "tricep" }
         ],
         B: [
-            { name: "Squat", sets: 5, type: "rack", id: "squat" },
-            { name: "Overhead Press", sets: 5, type: "rack", id: "ohp" },
-            { name: "Deadlift", sets: 1, type: "rack", id: "deadlift" },
-            { name: "Lat Pulldown", sets: 3, type: "pulley", id: "latpull" },
-            { name: "Bicep Curl", sets: 3, type: "pulley", id: "curl" }
+            { name: "Squat", sets: 5, id: "squat" },
+            { name: "OHP", sets: 5, id: "ohp" },
+            { name: "Deadlift", sets: 1, id: "deadlift" },
+            { name: "Lat Pulldown", sets: 3, id: "latpull" },
+            { name: "Curls", sets: 3, id: "curl" }
         ]
     };
 
-    // --- STATE MANAGEMENT (Clean Slate) ---
-    // We changed the key to 'sf_data_v8_1' to avoid crashes from old corrupt data
-    let state = JSON.parse(localStorage.getItem('sf_data_v8_1')) || {
+    // --- 3. HARD RESET STATE ---
+    // We are NOT loading from localStorage to prove the code works.
+    let state = {
         currentRoutine: 'A',
         weights: { squat: 75, bench: 85, row: 65, ohp: 45, deadlift: 135, facepull: 20, tricep: 30, latpull: 70, curl: 25 },
-        durations: {} 
+        durations: {}
     };
-    
-    // Runtime State
+
+    let currentTarget = { exIndex: 0, setIndex: 0, status: 'ready' };
+    let startTime = 0;
+    let timerInt = null;
+
+    // --- 4. RENDER ENGINE ---
+    function init() {
+        log("Init started");
+        
+        const list = document.getElementById('exerciseList');
+        const routine = config[state.currentRoutine];
+        
+        log(`Routine: ${state.currentRoutine}, Items: ${routine.length}`);
+
+        routine.forEach((ex, idx) => {
+            log(`Rendering ${ex.name}...`);
+            
+            // Build Bubbles
+            let bubbles = "";
+            for(let i=0; i<ex.sets; i++) {
+                bubbles += `<div class="bubble" id="b_${idx}_${i}"></div>`;
+            }
+
+            // Create Card
+            const div = document.createElement('div');
+            div.className = "card";
+            div.innerHTML = `
+                <div class="row">
+                    <b>${ex.name}</b>
+                    <span>${state.weights[ex.id]} lbs</span>
+                </div>
+                <div class="bubbles">${bubbles}</div>
+            `;
+            list.appendChild(div);
+        });
+
+        log("Render Complete");
+        highlightNext();
+    }
+
+    // --- 5. INTERACTION ---
+    function highlightNext() {
+        // Reset all bubbles visually (simple redraw)
+        document.querySelectorAll('.bubble').forEach(b => {
+            b.className = 'bubble'; // clear active
+        });
+        
+        // Mark past ones done
+        for(let e=0; e<config.A.length; e++) {
+            for(let s=0; s<5; s++) {
+                const b = document.getElementById(`b_${e}_${s}`);
+                if(b && (e < currentTarget.exIndex || (e===currentTarget.exIndex && s < currentTarget.setIndex))) {
+                    b.classList.add('done');
+                }
+            }
+        }
+
+        // Highlight Current
+        const curB = document.getElementById(`b_${currentTarget.exIndex}_${currentTarget.setIndex}`);
+        if(curB) {
+            if(currentTarget.status === 'lifting') curB.classList.add('active');
