@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Protocol 5x5 Pro</title>
+    <style>
+        :root { --bg: #f2f2f7; --card: #ffffff; --text: #000; --sub: #8e8e93; --accent: #007aff; --active: #ffcc00; --success: #34c759; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 20px; padding-bottom: 140px; margin: 0; }
+
+        /* HEADER */
+        header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        h1 { font-size: 2rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
+        #sessionTimer { font-variant-numeric: tabular-nums; font-size: 1.2rem; font-weight: 600; color: var(--sub); background: #e5e5ea; padding: 4px 10px; border-radius: 8px; }
+        p.subtitle { color: var(--sub); font-size: 0.9rem; margin-top: 5px; font-weight: 500; }
+
+        /* CARDS */
+        .card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .ex-name { font-size: 1.1rem; font-weight: 700; }
+        
+        .weight-ui { display: flex; align-items: center; background: var(--bg); border-radius: 10px; padding: 4px; gap: 4px; }
+        .adj-btn { width: 32px; height: 32px; border: none; background: #fff; border-radius: 7px; font-size: 1.2rem; font-weight: 600; color: var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        input.weight-val { width: 50px; background: transparent; border: none; font-size: 1.2rem; font-weight: 700; text-align: center; color: var(--text); padding: 0; }
+        
+        /* BUBBLES */
+        .sets-row { display: flex; gap: 8px; }
+        .bubble { flex: 1; height: 36px; border-radius: 8px; border: 2px solid #e5e5ea; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+        
+        /* State: LIFTING (Yellow/Pulse) */
+        .bubble.active { background: var(--active); border-color: var(--active); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        /* State: DONE (Green) */
+        .bubble.done { background: var(--success); border-color: var(--success); }
+
+        /* REST TIMER BAR */
+        #restBar { position: fixed; bottom: 90px; left: 20px; right: 20px; background: #000; color: white; padding: 12px 20px; border-radius: 50px; display: flex; justify-content: space-between; align-items: center; transform: translateY(150%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 90; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        #restBar.active { transform: translateY(0); }
+        #restBar.lifting { background: var(--active); color: black; } 
+        
+        #restTimerDisplay { font-weight: 700; font-feature-settings: "tnum"; font-size: 1.1rem; }
+        .skip-btn { background: #333; border: none; color: #fff; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        #restBar.lifting .skip-btn { background: rgba(0,0,0,0.1); color: black; }
+
+        /* FOOTER */
+        .fab-container { position: fixed; bottom: 25px; left: 0; width: 100%; padding: 0 20px; z-index: 100; }
+        #finishBtn { width: 100%; background: var(--text); color: #fff; border: none; padding: 18px; font-size: 1.1rem; font-weight: 700; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: 0.2s; }
+        
+        .version-tag { text-align: center; font-size: 0.75rem; color: #ccc; margin-top: 15px; font-family: monospace; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1 id="workoutTitle">Workout A</h1>
+            <p class="subtitle" id="nextWorkoutMsg">Next: Workout B</p>
+        </div>
+        <div id="sessionTimer">00:00</div>
+    </header>
+
+    <div id="exerciseList"></div>
+    
+    <div class="version-tag">v6.1 - Timer Sync Enabled</div>
+
+    <div id="restBar">
+        <span id="timerLabel" style="font-size:0.9rem; opacity:0.8;">Resting...</span>
+        <span id="restTimerDisplay">00:00</span>
