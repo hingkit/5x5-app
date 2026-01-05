@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Protocol v19 Final</title>
+    <title>Protocol v20 Final</title>
     <style>
         /* --- PRO ATHLETE THEME (Navy/Copper) --- */
         :root { 
@@ -44,7 +44,7 @@
         #sync-status { font-size: 0.7rem; color: var(--sub); text-align: right; margin-top: 5px; height: 10px; opacity: 0; transition: opacity 0.5s; }
 
         /* CARDS */
-        #list { display: flex; flex-direction: column; gap: 20px; padding-bottom: 100px; }
+        #list { display: flex; flex-direction: column; gap: 20px; padding-bottom: 100px; min-height: 200px; }
         .card { 
             background: var(--card); border-radius: 20px; padding: 24px; 
             border: 2px solid transparent; transition: 0.3s ease; 
@@ -152,6 +152,7 @@
         { name: "Bicep Curls", w: 20, sets: 3, reps: 12, cue: "Squeeze at top.", rest: "Relax." }
     ];
 
+    // Force clone defaults immediately to prevent empty list crash
     var CURRENT_ROUTINE = JSON.parse(JSON.stringify(DEFAULT_A));
     var CURRENT_TYPE = 'A';
 
@@ -166,7 +167,15 @@
 
     // --- AUTO START ---
     window.addEventListener('load', function() {
-        loadLocal(); // Load saved weights
+        // We do NOT load 'v19' keys. We switch to 'v20' to force fresh start.
+        try {
+            var savedA = localStorage.getItem('protocol_v20_A');
+            var savedB = localStorage.getItem('protocol_v20_B');
+            if(savedA) CURRENT_ROUTINE = JSON.parse(savedA);
+        } catch(e) {
+            console.log("Fresh Start");
+        }
+        
         renderList();
         
         setInterval(function() {
@@ -269,9 +278,10 @@
         if(confirm("Switch workout? Progress will reset.")) {
             CURRENT_TYPE = type;
             if(type === 'A') {
+                // Force Load Default First, then try save
                 CURRENT_ROUTINE = JSON.parse(JSON.stringify(DEFAULT_A)); 
                 try {
-                     var saved = localStorage.getItem('protocol_v19_A');
+                     var saved = localStorage.getItem('protocol_v20_A');
                      if(saved) CURRENT_ROUTINE = JSON.parse(saved);
                 } catch(e) {}
                 document.getElementById('btnA').classList.add('active');
@@ -279,7 +289,7 @@
             } else {
                 CURRENT_ROUTINE = JSON.parse(JSON.stringify(DEFAULT_B));
                 try {
-                     var saved = localStorage.getItem('protocol_v19_B');
+                     var saved = localStorage.getItem('protocol_v20_B');
                      if(saved) CURRENT_ROUTINE = JSON.parse(saved);
                 } catch(e) {}
                 document.getElementById('btnB').classList.add('active');
@@ -333,17 +343,54 @@
 
     // --- CLOUD SYNC ---
     function saveLocal() {
-        if(CURRENT_TYPE === 'A') localStorage.setItem('protocol_v19_A', JSON.stringify(CURRENT_ROUTINE));
-        else localStorage.setItem('protocol_v19_B', JSON.stringify(CURRENT_ROUTINE));
+        if(CURRENT_TYPE === 'A') localStorage.setItem('protocol_v20_A', JSON.stringify(CURRENT_ROUTINE));
+        else localStorage.setItem('protocol_v20_B', JSON.stringify(CURRENT_ROUTINE));
     }
 
-    function loadLocal() {
-        var a = localStorage.getItem('protocol_v19_A');
-        var b = localStorage.getItem('protocol_v19_B');
-        if(a) WORKOUT_A = JSON.parse(a);
-        if(b) WORKOUT_B = JSON.parse(b);
-        if(CURRENT_TYPE === 'A') CURRENT_ROUTINE = WORKOUT_A;
-        else CURRENT_ROUTINE = WORKOUT_B;
+    function renderList() {
+        var list = document.getElementById('list');
+        list.innerHTML = "";
+        
+        for(var i=0; i<CURRENT_ROUTINE.length; i++) {
+            var ex = CURRENT_ROUTINE[i];
+            ex.totalVol = ex.totalVol || 0;
+            ex.totalTime = ex.totalTime || 0;
+
+            var bars = "";
+            for(var b=0; b<ex.sets; b++) {
+                bars += '<div class="seg" id="seg_'+i+'_'+b+'"></div>';
+            }
+
+            list.innerHTML += `
+                <div class="card" id="card_${i}">
+                    <div class="controls-row">
+                        <div class="ex-name">${ex.name}</div>
+                        <div class="adjuster-group">
+                            <div class="adj-ui">
+                                <span class="adj-label">LBS</span>
+                                <button class="btn-adj" onclick="modWeight(${i}, -5)">−</button>
+                                <span class="val-display" id="w_${i}">${ex.w}</span>
+                                <button class="btn-adj" onclick="modWeight(${i}, 5)">+</button>
+                            </div>
+                            <div class="adj-ui">
+                                <span class="adj-label">REPS</span>
+                                <button class="btn-adj" onclick="modReps(${i}, -1)">−</button>
+                                <span class="val-display" id="r_${i}">${ex.reps}</span>
+                                <button class="btn-adj" onclick="modReps(${i}, 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-row">
+                        <span>VOL <span class="stat-val" id="vol_${i}">${ex.totalVol.toLocaleString()}</span></span>
+                        <span>TIME <span class="stat-val" id="time_${i}">${ex.totalTime}s</span></span>
+                    </div>
+
+                    <div class="track">${bars}</div>
+                    <div class="set-logs" id="logs_${i}"></div>
+                </div>
+            `;
+        }
     }
 
     function sendToCloud(exName, weight, reps, time) {
