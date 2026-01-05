@@ -3,51 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Protocol 5x5</title>
+    <title>Protocol 5x5 Pro</title>
     <style>
-        /* APP STYLING (Clean Light Mode) */
-        :root { --bg-color: #f2f2f7; --card-bg: #ffffff; --text-main: #000000; --text-sub: #8e8e93; --accent: #007aff; --success: #34c759; }
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-color); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; padding-bottom: 120px; max-width: 600px; margin: 0 auto; }
+        :root { --bg: #f2f2f7; --card: #ffffff; --text: #000; --sub: #8e8e93; --accent: #007aff; --active: #ffcc00; --success: #34c759; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 20px; padding-bottom: 140px; margin: 0; }
+
+        /* HEADER */
+        header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        h1 { font-size: 2rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
+        #sessionTimer { font-variant-numeric: tabular-nums; font-size: 1.2rem; font-weight: 600; color: var(--sub); background: #e5e5ea; padding: 4px 10px; border-radius: 8px; }
+        p.subtitle { color: var(--sub); font-size: 0.9rem; margin-top: 5px; font-weight: 500; }
+
+        /* CARDS */
+        .card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .ex-name { font-size: 1.1rem; font-weight: 700; }
         
-        header { margin-bottom: 25px; }
-        h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 5px; }
-        p.subtitle { color: var(--text-sub); font-size: 1rem; font-weight: 500; }
-
-        .card { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .ex-name { font-size: 1.2rem; font-weight: 700; }
-        .ex-tag { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; font-weight: 700; text-transform: uppercase; background: #f2f2f7; color: #666; }
+        .weight-ui { display: flex; align-items: center; background: var(--bg); border-radius: 10px; padding: 4px; gap: 4px; }
+        .adj-btn { width: 32px; height: 32px; border: none; background: #fff; border-radius: 7px; font-size: 1.2rem; font-weight: 600; color: var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        input.weight-val { width: 50px; background: transparent; border: none; font-size: 1.2rem; font-weight: 700; text-align: center; color: var(--text); padding: 0; }
         
-        .weight-control { display: flex; align-items: center; gap: 10px; background: #f2f2f7; padding: 5px 10px; border-radius: 10px; }
-        input[type="number"] { background: transparent; border: none; font-size: 1.3rem; font-weight: 700; width: 60px; text-align: center; color: var(--text-main); outline: none; }
-        .unit { font-size: 0.8rem; font-weight: 600; color: #888; }
+        /* BUBBLES */
+        .sets-row { display: flex; gap: 8px; }
+        .bubble { flex: 1; height: 36px; border-radius: 8px; border: 2px solid #e5e5ea; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+        
+        /* State: LIFTING (Yellow/Pulse) */
+        .bubble.active { background: var(--active); border-color: var(--active); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        .sets-container { display: flex; justify-content: space-between; gap: 5px; margin-top: 10px; }
-        .set-bubble { height: 40px; flex-grow: 1; border-radius: 8px; border: 2px solid #e5e5ea; background: transparent; cursor: pointer; transition: all 0.2s; }
-        .set-bubble.active { background-color: var(--accent); border-color: var(--accent); }
+        /* State: DONE (Green) */
+        .bubble.done { background: var(--success); border-color: var(--success); }
 
-        .fab-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px; z-index: 100; }
-        button#finishBtn { width: 100%; background-color: var(--text-main); color: white; border: none; padding: 18px; font-size: 1.1rem; font-weight: 700; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: background-color 0.3s; }
+        /* REST TIMER BAR */
+        #restBar { position: fixed; bottom: 90px; left: 20px; right: 20px; background: #000; color: white; padding: 12px 20px; border-radius: 50px; display: flex; justify-content: space-between; align-items: center; transform: translateY(150%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 90; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        #restBar.active { transform: translateY(0); }
+        #restBar.lifting { background: var(--active); color: black; } /* Style for lifting timer */
+        
+        #restTimerDisplay { font-weight: 700; font-feature-settings: "tnum"; font-size: 1.1rem; }
+        .skip-btn { background: #333; border: none; color: #fff; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        #restBar.lifting .skip-btn { background: rgba(0,0,0,0.1); color: black; }
+
+        /* FOOTER */
+        .fab-container { position: fixed; bottom: 25px; left: 0; width: 100%; padding: 0 20px; z-index: 100; }
+        #finishBtn { width: 100%; background: var(--text); color: #fff; border: none; padding: 18px; font-size: 1.1rem; font-weight: 700; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: 0.2s; }
+
     </style>
 </head>
 <body>
 
     <header>
-        <h1 id="workoutTitle">Workout A</h1>
-        <p class="subtitle" id="nextWorkoutMsg">Next: Workout B</p>
+        <div>
+            <h1 id="workoutTitle">Workout A</h1>
+            <p class="subtitle" id="nextWorkoutMsg">Next: Workout B</p>
+        </div>
+        <div id="sessionTimer">00:00</div>
     </header>
 
     <div id="exerciseList"></div>
 
+    <div id="restBar">
+        <span id="timerLabel" style="font-size:0.9rem; opacity:0.8;">Resting...</span>
+        <span id="restTimerDisplay">00:00</span>
+        <button class="skip-btn" onclick="stopBarTimer()">SKIP</button>
+    </div>
+
     <div class="fab-container">
-        <button id="finishBtn" onclick="finishWorkout()">Complete Workout</button>
+        <button id="finishBtn" onclick="syncData()">Finish & Sync</button>
     </div>
 
 <script>
-    // --- 1. CONFIGURATION ---
-    
-    // !!! PASTE YOUR DEPLOYED GOOGLE SCRIPT URL BETWEEN THE QUOTES BELOW !!!
+    // --- YOUR SAVED URL ---
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQa2DcUfTAzmszUb02lB4dgneZvZpurgZszpl_NReTCD6ExcIrPtm_Y_yHhuviilqU/exec";
 
     const config = {
@@ -67,24 +93,26 @@
         ]
     };
 
-    // --- 2. STATE (Calibrated for Restart) ---
-    let state = JSON.parse(localStorage.getItem('sf_workout_v4')) || {
+    // --- STATE ---
+    let state = JSON.parse(localStorage.getItem('sf_workout_v6')) || {
         currentRoutine: 'A',
-        // Starting weights calibrated for 160lb male, 40+, returning to gym
-        weights: { 
-            squat: 75,    
-            bench: 85,    
-            row: 65,      
-            ohp: 45,      
-            deadlift: 135,
-            facepull: 20, 
-            tricep: 30, 
-            latpull: 70, 
-            curl: 25 
-        }
+        weights: { squat: 75, bench: 85, row: 65, ohp: 45, deadlift: 135, facepull: 20, tricep: 30, latpull: 70, curl: 25 },
+        durations: {} // Stores time per set
     };
+    
+    // Globals
+    let sessionSeconds = 0;
+    let barInterval = null;
+    let setStartTime = 0;
 
-    // --- 3. APP LOGIC ---
+    function init() {
+        render();
+        setInterval(() => {
+            sessionSeconds++;
+            document.getElementById('sessionTimer').innerText = formatTime(sessionSeconds);
+        }, 1000);
+    }
+
     function render() {
         document.getElementById('workoutTitle').innerText = `Workout ${state.currentRoutine}`;
         document.getElementById('nextWorkoutMsg').innerText = `Up Next: Workout ${state.currentRoutine === 'A' ? 'B' : 'A'}`;
@@ -92,85 +120,152 @@
         const list = document.getElementById('exerciseList');
         list.innerHTML = '';
 
-        config[state.currentRoutine].forEach(ex => {
+        config[state.currentRoutine].forEach((ex) => {
             let bubblesHtml = '';
-            for(let i=0; i<ex.sets; i++) bubblesHtml += `<div class="set-bubble" onclick="this.classList.toggle('active')"></div>`;
+            for(let i=0; i<ex.sets; i++) {
+                bubblesHtml += `<div class="bubble" id="bubble_${ex.id}_${i}" onclick="handleBubble(this, '${ex.id}', ${i})"></div>`;
+            }
 
             const el = document.createElement('div');
             el.className = 'card';
             el.innerHTML = `
-                <div class="card-header">
-                    <div>
-                        <div class="ex-name">${ex.name}</div>
-                        <div><span class="ex-tag">${ex.type}</span> <span class="ex-tag" style="background:transparent; padding-left:0;">${ex.sets} Sets</span></div>
-                    </div>
-                    <div class="weight-control">
-                        <input type="number" id="val_${ex.id}" value="${state.weights[ex.id]}" step="5">
-                        <span class="unit">lbs</span>
+                <div class="card-top">
+                    <div class="ex-name">${ex.name}</div>
+                    <div class="weight-ui">
+                        <button class="adj-btn" onclick="adjustWeight('${ex.id}', -5)">−</button>
+                        <input type="number" id="val_${ex.id}" class="weight-val" value="${state.weights[ex.id]}" readonly>
+                        <button class="adj-btn" onclick="adjustWeight('${ex.id}', 5)">+</button>
                     </div>
                 </div>
-                <div class="sets-container">${bubblesHtml}</div>
+                <div class="sets-row">${bubblesHtml}</div>
             `;
             list.appendChild(el);
         });
     }
 
-    async function finishWorkout() {
+    // --- LOGIC: The 3-Step Bubble ---
+    window.handleBubble = function(el, exId, index) {
+        // Step 1: START LIFTING (Yellow)
+        if (!el.classList.contains('active') && !el.classList.contains('done')) {
+            el.classList.add('active');
+            setStartTime = Date.now();
+            showBar("Lifting...", "lifting"); // Start counting UP
+        } 
+        // Step 2: FINISH LIFTING (Green)
+        else if (el.classList.contains('active')) {
+            el.classList.remove('active');
+            el.classList.add('done');
+            
+            // Calculate Duration
+            const duration = Math.round((Date.now() - setStartTime) / 1000);
+            
+            // Store it
+            if(!state.durations[exId]) state.durations[exId] = 0;
+            state.durations[exId] += duration;
+            
+            showBar("Resting", "resting"); // Start counting DOWN (90s)
+        }
+        // Step 3: RESET (Undo)
+        else if (el.classList.contains('done')) {
+            el.classList.remove('done');
+            // We don't subtract duration because that gets messy, just visual reset
+        }
+    }
+
+    window.adjustWeight = function(id, amount) {
+        state.weights[id] += amount;
+        if(state.weights[id] < 0) state.weights[id] = 0;
+        document.getElementById(`val_${id}`).value = state.weights[id];
+        localStorage.setItem('sf_workout_v6', JSON.stringify(state));
+    }
+
+    // --- TIMER BAR CONTROL ---
+    function showBar(label, mode) {
+        clearInterval(barInterval);
+        const bar = document.getElementById('restBar');
+        const display = document.getElementById('restTimerDisplay');
+        const labelEl = document.getElementById('timerLabel');
+        
+        bar.classList.add('active');
+        labelEl.innerText = label;
+
+        if (mode === 'lifting') {
+            // Count UP
+            bar.className = 'active lifting'; // Yellow
+            let sec = 0;
+            display.innerText = "00:00";
+            barInterval = setInterval(() => { sec++; display.innerText = formatTime(sec); }, 1000);
+        } else {
+            // Count DOWN (Rest)
+            bar.className = 'active'; // Black
+            let sec = 90;
+            display.innerText = "01:30";
+            barInterval = setInterval(() => { 
+                sec--; 
+                display.innerText = formatTime(sec);
+                if(sec <= 0) stopBarTimer();
+            }, 1000);
+        }
+    }
+
+    window.stopBarTimer = function() {
+        clearInterval(barInterval);
+        document.getElementById('restBar').classList.remove('active');
+    }
+    
+    function formatTime(sec) {
+        const m = Math.floor(sec / 60).toString().padStart(2, '0');
+        const s = (sec % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    // --- SYNC ---
+    window.syncData = async function() {
         const btn = document.getElementById('finishBtn');
         btn.innerText = "Syncing...";
-        btn.style.backgroundColor = "#007aff";
+        btn.style.background = "#007aff";
 
         let logPayload = [];
         const today = new Date().toLocaleDateString();
 
-        // Update State & Prepare Payload
         config[state.currentRoutine].forEach(ex => {
-            const input = document.getElementById(`val_${ex.id}`);
-            const val = parseInt(input.value);
-            state.weights[ex.id] = val;
+            // Get total duration for this exercise (or 0 if undefined)
+            const timeVal = state.durations[ex.id] ? state.durations[ex.id] + "s" : "0s";
             
             logPayload.push({
                 date: today,
                 routine: state.currentRoutine,
                 exercise: ex.name,
-                weight: val
+                weight: state.weights[ex.id],
+                time: timeVal // Sending the new column
             });
 
-            // Auto Progress (+5lbs) for Rack lifts only
+            // Auto Progress Rack Lifts
             if(ex.type === 'rack') state.weights[ex.id] += 5; 
         });
 
-        // Toggle Routine & Save Local
+        // Reset Durations for next time
+        state.durations = {};
         state.currentRoutine = state.currentRoutine === 'A' ? 'B' : 'A';
-        localStorage.setItem('sf_workout_v4', JSON.stringify(state));
+        localStorage.setItem('sf_workout_v6', JSON.stringify(state));
 
-        // Send to Google Sheets
-        if (GOOGLE_SCRIPT_URL.includes("script.google.com")) {
-            try {
-                await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(logPayload)
-                });
-                btn.innerText = "Success! Saved.";
-                btn.style.backgroundColor = "#34c759";
-            } catch (e) {
-                btn.innerText = "Saved Locally (Sync Failed)";
-                btn.style.backgroundColor = "#ff9500";
-            }
-        } else {
-             btn.innerText = "Saved Locally (No URL)";
-             btn.style.backgroundColor = "#34c759";
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(logPayload)
+            });
+            btn.innerText = "Success!";
+            btn.style.background = "#34c759";
+        } catch (e) {
+            btn.innerText = "Saved Locally";
         }
 
-        setTimeout(() => {
-            location.reload();
-            window.scrollTo(0,0);
-        }, 1500);
+        setTimeout(() => location.reload(), 1500);
     }
 
-    render();
+    init();
 </script>
 </body>
 </html>
