@@ -5,24 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Protocol v25 Tech</title>
+    <title>Protocol v27.1 Final</title>
     <style>
-        /* --- TECHNICAL LUXURY THEME (Alo/Kit&Ace 2025) --- */
+        /* --- TECHNICAL LUXURY THEME (Bone/Onyx/Copper) --- */
         :root { 
             --bg: #fdfbf7;        /* Bone White */
             --card: #ffffff;      /* Pure White */
             --text: #171717;      /* Sharp Black */
             --sub: #737373;       /* Technical Grey */
-            --accent: #171717;    /* Onyx (Primary Action) */
-            --copper: #b45309;    /* Copper (Highlight/Victory) */
+            --accent: #171717;    /* Onyx (Action) */
+            --copper: #b45309;    /* Copper (Progress/Victory) */
             --track: #e5e5e5;     /* Light Grey */
             --border: #f0f0f0;    /* Subtle Borders */
         }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
+            background: var(--bg); color: var(--text); 
             margin: 0; padding: 24px; padding-bottom: 240px; 
             text-align: center; 
             -webkit-font-smoothing: antialiased;
@@ -30,53 +29,62 @@
         }
 
         /* HEADER */
-        header { margin-bottom: 30px; padding-top: 10px; }
+        header { margin-bottom: 30px; padding-top: 5px; }
+        .meta-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        #date-display { font-size: 0.75rem; font-weight: 700; color: var(--sub); letter-spacing: 1px; text-transform: uppercase; }
+        #session-timer { font-family: 'Courier New', monospace; font-size: 0.9rem; font-weight: 600; color: var(--copper); }
+
         .top-bar { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
         
-        /* WORKOUT SWITCHER - Minimal Text Tabs */
         .workout-switch { display: flex; gap: 20px; }
         .switch-btn { 
             background: transparent; border: none; 
             font-size: 0.9rem; font-weight: 600; color: var(--sub); 
             cursor: pointer; padding: 0; letter-spacing: 0.5px;
-            transition: color 0.2s;
+            transition: color 0.2s; position: relative;
         }
-        .switch-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 2px; }
+        .switch-btn.active { color: var(--accent); }
+        .switch-btn.active::after { 
+            content:''; position: absolute; bottom: -17px; left: 0; right: 0; 
+            height: 2px; background: var(--accent); 
+        }
         
-        #session-timer { font-family: 'Courier New', monospace; font-size: 1rem; font-weight: 600; color: var(--copper); }
+        .rec-tag { 
+            font-size: 0.5rem; background: var(--copper); color: #fff; 
+            padding: 2px 4px; border-radius: 2px; position: absolute; 
+            top: -10px; right: -10px; opacity: 0; transition: opacity 0.3s;
+        }
+        .show-rec .rec-tag { opacity: 1; }
+
         #sync-status { font-size: 0.65rem; color: var(--sub); text-align: right; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; height: 10px; opacity: 0; transition: opacity 0.5s; }
 
-        /* CARDS - Clean & Sharp */
+        /* CARDS */
         #list { display: flex; flex-direction: column; gap: 16px; padding-bottom: 100px; }
         .card { 
-            background: var(--card); 
-            border: 1px solid var(--border); 
-            border-radius: 4px; /* Sharper corners */
-            padding: 24px; 
-            transition: 0.2s ease; 
-            position: relative; text-align: left;
+            background: var(--card); border: 1px solid var(--border); border-radius: 4px; 
+            padding: 24px; transition: 0.2s ease; position: relative; text-align: left;
             box-shadow: 0 4px 20px rgba(0,0,0,0.02);
         }
         .card.active { 
-            border-color: var(--accent); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
-            transform: translateY(-2px);
-            z-index: 10; 
+            border-color: var(--copper); /* Copper Border for Active */
+            box-shadow: 0 10px 30px rgba(180, 83, 9, 0.1); 
+            transform: translateY(-2px); z-index: 10; 
         }
 
         /* CONTROLS */
-        .controls-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .controls-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .ex-name { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text); }
         
-        /* ADJUSTERS - Minimalist Pills */
-        .adjuster-group { display: flex; gap: 10px; }
+        /* PROGRESS TEXT INDICATOR */
+        .prog-text { font-size: 0.7rem; font-weight: 700; color: var(--copper); letter-spacing: 1px; text-transform: uppercase; }
+
+        .adjuster-group { display: flex; gap: 10px; margin-bottom: 10px;}
         .adj-ui { display: flex; align-items: center; gap: 8px; background: #f5f5f5; padding: 6px 10px; border-radius: 4px; }
         .adj-label { font-size: 0.6rem; color: var(--sub); font-weight: 700; letter-spacing: 0.5px; }
         .btn-adj { 
             width: 24px; height: 24px; border: none; background: #fff; 
-            color: var(--text); border-radius: 2px; 
-            font-size: 1.1rem; font-weight: 600; cursor: pointer; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            color: var(--text); border-radius: 2px; font-size: 1.1rem; font-weight: 600; 
+            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .val-display { font-weight: 700; font-size: 1rem; min-width: 28px; text-align: center; font-variant-numeric: tabular-nums; }
 
@@ -85,40 +93,54 @@
         .stat-val { color: var(--text); font-weight: 700; margin-left: 6px; }
         .stat-val.live { color: var(--copper); }
 
-        /* TRACKS - Thin & precise */
-        .track { display: flex; gap: 4px; height: 4px; width: 100%; margin-top: 8px; }
+        /* TRACKS - UPDATED COLORS */
+        .track { display: flex; gap: 4px; height: 6px; width: 100%; margin-top: 12px; }
         .seg { flex: 1; background: var(--track); border-radius: 1px; transition: 0.3s; }
-        .seg.active { background: var(--copper); } /* Copper for progress */
-        .seg.done { background: #d4d4d4; }
+        .seg.active { background: var(--text); box-shadow: 0 0 10px rgba(0,0,0,0.1); } /* Active is Black */
+        .seg.done { background: var(--copper); } /* Done is Copper */
 
-        /* LOG BADGES - Technical Tags */
+        /* LOG BADGES */
         .set-logs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
         .log-badge { 
-            font-size: 0.65rem; font-weight: 600; 
-            background: #fff; color: var(--sub); 
-            padding: 4px 8px; border: 1px solid var(--border); border-radius: 2px; 
-            letter-spacing: 0.5px;
+            font-size: 0.65rem; font-weight: 600; background: #fff; color: var(--sub); 
+            padding: 4px 8px; border: 1px solid var(--border); border-radius: 2px; letter-spacing: 0.5px;
         }
 
-        /* COACH BUTTON - The "Dashboard" */
+        /* COACH BUTTON CONTAINER */
+        #dashboard { 
+            position: fixed; bottom: 30px; left: 20px; right: 20px; 
+            display: flex; gap: 10px; align-items: stretch; z-index: 100;
+        }
+
+        /* MAIN BUTTON */
         #actionBtn { 
-            position: fixed; bottom: 30px; left: 20px; right: 20px; height: 85px; 
+            flex: 1; height: 85px; 
             background: var(--accent); color: #fff; border: none; border-radius: 4px; 
             cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; 
-            padding: 0 30px; gap: 20px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 100;
+            padding: 0 25px; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);
             transition: transform 0.1s;
         }
         #actionBtn:active { transform: scale(0.99); }
-        .btn-icon-box { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        
+        /* SKIP BUTTON */
+        #skipBtn {
+            width: 60px; background: #fff; border: 1px solid var(--border); border-radius: 4px;
+            color: var(--sub); font-weight: 700; font-size: 0.7rem; letter-spacing: 1px;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            cursor: pointer; box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            text-transform: uppercase;
+        }
+        #skipBtn:active { background: #f5f5f5; }
+
+        .btn-icon-box { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
         .btn-icon-box svg { width: 100%; height: 100%; fill: currentColor; }
         .btn-text-box { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
-        #btnMain { font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; line-height: 1; text-transform: uppercase; }
-        #btnSub { font-size: 0.75rem; font-weight: 500; opacity: 0.7; margin-top: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+        #btnMain { font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; line-height: 1; text-transform: uppercase; }
+        #btnSub { font-size: 0.7rem; font-weight: 500; opacity: 0.7; margin-top: 5px; letter-spacing: 0.5px; text-transform: uppercase; }
 
         /* STATES */
         .st-lift { background: var(--accent) !important; color: #fff !important; }
-        .st-rest { background: #fff !important; color: var(--text) !important; border: 2px solid var(--accent); }
+        .st-rest { background: #fff !important; color: var(--text) !important; border: 2px solid var(--accent) !important; }
         .st-gold { background: var(--copper) !important; color: #fff !important; border: none !important; box-shadow: 0 10px 50px rgba(180, 83, 9, 0.4) !important; }
 
         /* VICTORY LAYER */
@@ -134,12 +156,15 @@
 <body>
 
     <header id="main-header">
+        <div class="meta-bar">
+            <div id="date-display">...</div>
+            <div id="session-timer">00:00</div>
+        </div>
         <div class="top-bar">
             <div class="workout-switch">
-                <button class="switch-btn active" id="btnA" onclick="switchWorkout('A')">WORKOUT A</button>
-                <button class="switch-btn" id="btnB" onclick="switchWorkout('B')">WORKOUT B</button>
+                <button class="switch-btn active" id="btnA" onclick="switchWorkout('A')">WORKOUT A <span class="rec-tag">REC</span></button>
+                <button class="switch-btn" id="btnB" onclick="switchWorkout('B')">WORKOUT B <span class="rec-tag">REC</span></button>
             </div>
-            <div id="session-timer">00:00</div>
         </div>
         <div id="sync-status"></div>
     </header>
@@ -154,16 +179,22 @@
         <div class="victory-val" id="vic-time">00:00</div>
     </div>
 
-    <button id="actionBtn" onclick="handleAction()">
-        <div class="btn-icon-box" id="btnIcon"></div>
-        <div class="btn-text-box">
-            <div id="btnMain">START</div>
-            <div id="btnSub">Ready</div>
-        </div>
-    </button>
+    <div id="dashboard">
+        <button id="actionBtn" onclick="handleAction()">
+            <div class="btn-icon-box" id="btnIcon"></div>
+            <div class="btn-text-box">
+                <div id="btnMain">START</div>
+                <div id="btnSub">Ready</div>
+            </div>
+        </button>
+        <button id="skipBtn" onclick="handleSkip()">
+            <span>Skip</span>
+            <span style="font-size:1.2rem;">&raquo;</span>
+        </button>
+    </div>
 
 <script>
-    // --- PRE-LOADED URL ---
+    // --- PRE-CONFIGURED URL ---
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQa2DcUfTAzmszUb02lB4dgneZvZpurgZszpl_NReTCD6ExcIrPtm_Y_yHhuviilqU/exec"; 
 
     // --- ICONS ---
@@ -178,15 +209,24 @@
     const DEFAULT_A=[{name:"Squat",w:75,sets:5,reps:5,cue:"Knees out. Chest up.",rest:"Walk it off."},{name:"Bench Press",w:85,sets:5,reps:5,cue:"Leg drive. Explode.",rest:"Open chest."},{name:"Barbell Row",w:65,sets:5,reps:5,cue:"Flat back. Pull to hips.",rest:"Relax back."},{name:"Face Pulls",w:20,sets:3,reps:12,cue:"Squeeze rear delts.",rest:"Deep breath."},{name:"Tri Pushdown",w:30,sets:3,reps:12,cue:"Lock elbows.",rest:"Shake arms."}];
     const DEFAULT_B=[{name:"Squat",w:75,sets:5,reps:5,cue:"Knees out. Chest up.",rest:"Walk it off."},{name:"Overhead Press",w:45,sets:5,reps:5,cue:"Squeeze glutes.",rest:"Shake shoulders."},{name:"Deadlift",w:135,sets:1,reps:5,cue:"Drag bar up legs.",rest:"Deep breaths."},{name:"Chin Ups",w:0,sets:3,reps:8,cue:"Chin over bar.",rest:"Shake arms."},{name:"Bicep Curls",w:20,sets:3,reps:12,cue:"Squeeze at top.",rest:"Relax."}];
     
-    // SAFETY INIT
     var CURRENT_ROUTINE=JSON.parse(JSON.stringify(DEFAULT_A));
     var CURRENT_TYPE='A';
     var currentEx=0, currentSet=0, step=0, sessionSecs=0, liftSecs=0, liftInt=null, restInt=null, sessionTotalVol=0;
 
     // --- AUTO START ---
     window.addEventListener('load',function(){
+        // Date
+        const d = new Date();
+        document.getElementById('date-display').innerText = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+
+        // Smart Rec
+        var last = localStorage.getItem('protocol_last_type');
+        var rec = (last === 'A') ? 'B' : 'A';
+        if(rec === 'A') document.getElementById('btnA').classList.add('show-rec');
+        else document.getElementById('btnB').classList.add('show-rec');
+
         try{
-            var savedA=localStorage.getItem('protocol_v25_A');
+            var savedA=localStorage.getItem('protocol_v27_A');
             if(savedA) CURRENT_ROUTINE=JSON.parse(savedA);
         }catch(e){ console.log("Fresh Start"); }
         
@@ -213,18 +253,48 @@
             liftInt=setInterval(function(){liftSecs++;document.getElementById('time_'+currentEx).innerText=(ex.totalTime||0)+liftSecs+"s";},1000);
         }else if(step===1){ // Lift -> Rest
             step=2; clearInterval(liftInt);
-            ex.totalTime=(ex.totalTime||0)+liftSecs;
-            document.getElementById('time_'+currentEx).className="stat-val";
-            document.getElementById('time_'+currentEx).innerText=ex.totalTime+"s";
-            var setVol=ex.w*ex.reps; ex.totalVol=(ex.totalVol||0)+setVol; sessionTotalVol+=setVol;
-            document.getElementById('vol_'+currentEx).innerText=ex.totalVol.toLocaleString();
-            document.getElementById('logs_'+currentEx).innerHTML+=`<div class="log-badge">S${currentSet+1} • ${ex.w}lb • ${ex.reps}</div>`;
-            document.getElementById('seg_'+currentEx+'_'+currentSet).className="seg done";
-            sendToCloud(ex.name,ex.w,ex.reps,liftSecs);
-            saveLocal();
-            startRest();
+            finishSet(ex, liftSecs, ex.reps); // Normal Finish
         }else if(step===2){ // Rest -> Next
             clearInterval(restInt); nextSet();
+        }
+    }
+
+    function handleSkip() {
+        if(step === 1) { // If lifting, stop timer
+            clearInterval(liftInt);
+        } else if (step === 2) { // If resting, stop rest
+            clearInterval(restInt);
+        }
+        
+        // Record 0 reps for skip
+        var ex = CURRENT_ROUTINE[currentEx];
+        finishSet(ex, 0, 0); // 0 time, 0 reps
+    }
+
+    function finishSet(ex, timeVal, repsVal) {
+        // Save Data
+        ex.totalTime=(ex.totalTime||0)+timeVal;
+        document.getElementById('time_'+currentEx).className="stat-val";
+        document.getElementById('time_'+currentEx).innerText=ex.totalTime+"s";
+        
+        var setVol=ex.w*repsVal; 
+        ex.totalVol=(ex.totalVol||0)+setVol; 
+        sessionTotalVol+=setVol;
+        document.getElementById('vol_'+currentEx).innerText=ex.totalVol.toLocaleString();
+        
+        var badgeText = (repsVal === 0) ? "SKIPPED" : `S${currentSet+1} • ${ex.w}lb • ${repsVal}`;
+        document.getElementById('logs_'+currentEx).innerHTML+=`<div class="log-badge">${badgeText}</div>`;
+        document.getElementById('seg_'+currentEx+'_'+currentSet).className="seg done";
+        
+        // Log to Cloud (GET Method)
+        sendToCloud(ex.name, ex.w, repsVal, timeVal);
+        saveLocal();
+        
+        // Go to Rest if not skipped, otherwise jump
+        if(repsVal > 0) {
+            step=2; startRest();
+        } else {
+            nextSet();
         }
     }
 
@@ -241,16 +311,20 @@
         currentSet++;
         if(currentSet>=CURRENT_ROUTINE[currentEx].sets){ currentSet=0; currentEx++; }
         if(currentEx>=CURRENT_ROUTINE.length){ triggerVictory(); return; }
+        
         step=0; highlightCard(currentEx); updateBtn(currentEx);
     }
 
     function triggerVictory(){
         document.getElementById('list').style.display='none';
         document.getElementById('main-header').style.opacity='0';
+        document.getElementById('dashboard').style.display='none'; // Hide controls
         document.getElementById('victory-layer').style.display='block';
         document.getElementById('vic-vol').innerText=sessionTotalVol.toLocaleString();
         document.getElementById('vic-time').innerText=fmt(sessionSecs);
-        setBtn("SESSION COMPLETE","Tap to Reset","st-gold","TROPHY");
+        
+        // Save smart schedule flag
+        localStorage.setItem('protocol_last_type', CURRENT_TYPE);
     }
 
     function switchWorkout(type){
@@ -258,17 +332,18 @@
             CURRENT_TYPE=type;
             if(type==='A'){
                 CURRENT_ROUTINE=JSON.parse(JSON.stringify(DEFAULT_A));
-                try{ var s=localStorage.getItem('protocol_v25_A'); if(s) CURRENT_ROUTINE=JSON.parse(s); }catch(e){}
+                try{ var s=localStorage.getItem('protocol_v27_A'); if(s) CURRENT_ROUTINE=JSON.parse(s); }catch(e){}
                 document.getElementById('btnA').classList.add('active'); document.getElementById('btnB').classList.remove('active');
             }else{
                 CURRENT_ROUTINE=JSON.parse(JSON.stringify(DEFAULT_B));
-                try{ var s=localStorage.getItem('protocol_v25_B'); if(s) CURRENT_ROUTINE=JSON.parse(s); }catch(e){}
+                try{ var s=localStorage.getItem('protocol_v27_B'); if(s) CURRENT_ROUTINE=JSON.parse(s); }catch(e){}
                 document.getElementById('btnB').classList.add('active'); document.getElementById('btnA').classList.remove('active');
             }
             currentEx=0; currentSet=0; step=0; renderList(); highlightCard(0); updateBtn(0);
         }
     }
 
+    // --- UI HELPERS ---
     function updateBtn(i){ var ex=CURRENT_ROUTINE[i]; setBtn("START SET "+(currentSet+1),"TARGET: "+ex.reps+" @ "+ex.w+" LBS","","UP"); }
     
     function setBtn(m,s,c,i){ 
@@ -276,7 +351,6 @@
         document.getElementById('btnMain').innerText=m; document.getElementById('btnSub').innerText=s; 
         document.getElementById('btnIcon').innerHTML=ICONS[i]; 
         
-        // Text Color Logic
         if(c==='st-rest') { b.style.color='#171717'; document.getElementById('btnSub').style.color='#737373'; }
         else { b.style.color='#fff'; document.getElementById('btnSub').style.color='rgba(255,255,255,0.7)'; }
     }
@@ -285,22 +359,46 @@
     function modReps(i,d){ CURRENT_ROUTINE[i].reps=Math.max(0,CURRENT_ROUTINE[i].reps+d); document.getElementById('r_'+i).innerText=CURRENT_ROUTINE[i].reps; if(i===currentEx && step===0) updateBtn(i); }
     function highlightCard(i){ document.querySelectorAll('.card').forEach(c=>c.classList.remove('active')); var c=document.getElementById('card_'+i); if(c){ c.classList.add('active'); c.scrollIntoView({behavior:'smooth',block:'center'}); } }
     function fmt(s){ var m=Math.floor(s/60).toString().padStart(2,'0'), sc=(s%60).toString().padStart(2,'0'); return m+":"+sc; }
-    function saveLocal(){ if(CURRENT_TYPE==='A') localStorage.setItem('protocol_v25_A',JSON.stringify(CURRENT_ROUTINE)); else localStorage.setItem('protocol_v25_B',JSON.stringify(CURRENT_ROUTINE)); }
+    function saveLocal(){ if(CURRENT_TYPE==='A') localStorage.setItem('protocol_v27_A',JSON.stringify(CURRENT_ROUTINE)); else localStorage.setItem('protocol_v27_B',JSON.stringify(CURRENT_ROUTINE)); }
     
     function renderList(){
         var l=document.getElementById('list'); l.innerHTML="";
         CURRENT_ROUTINE.forEach((ex,i)=>{
             ex.totalVol=ex.totalVol||0; ex.totalTime=ex.totalTime||0;
             var bars=""; for(var b=0;b<ex.sets;b++) bars+=`<div class="seg" id="seg_${i}_${b}"></div>`;
-            l.innerHTML+=`<div class="card" id="card_${i}"><div class="controls-row"><div class="ex-name">${ex.name}</div><div class="adjuster-group"><div class="adj-ui"><span class="adj-label">LBS</span><button class="btn-adj" onclick="modWeight(${i},-5)">−</button><span class="val-display" id="w_${i}">${ex.w}</span><button class="btn-adj" onclick="modWeight(${i},5)">+</button></div><div class="adj-ui"><span class="adj-label">REPS</span><button class="btn-adj" onclick="modReps(${i},-1)">−</button><span class="val-display" id="r_${i}">${ex.reps}</span><button class="btn-adj" onclick="modReps(${i},1)">+</button></div></div></div><div class="stats-row"><span>VOL <span class="stat-val" id="vol_${i}">${ex.totalVol.toLocaleString()}</span></span><span>TIME <span class="stat-val" id="time_${i}">${ex.totalTime}s</span></span></div><div class="track">${bars}</div><div class="set-logs" id="logs_${i}"></div></div>`;
+            
+            // Active Set Indicator
+            var progText = "";
+            if(i === currentEx) progText = `<div class="prog-text">SET ${currentSet+1} / ${ex.sets}</div>`;
+
+            l.innerHTML+=`
+            <div class="card" id="card_${i}">
+                <div class="controls-row">
+                    <div class="ex-name">${ex.name}</div>
+                    ${progText}
+                </div>
+                <div class="controls-row" style="justify-content:flex-start; gap:20px;">
+                    <div class="adjuster-group"><div class="adj-ui"><span class="adj-label">LBS</span><button class="btn-adj" onclick="modWeight(${i},-5)">−</button><span class="val-display" id="w_${i}">${ex.w}</span><button class="btn-adj" onclick="modWeight(${i},5)">+</button></div></div>
+                    <div class="adjuster-group"><div class="adj-ui"><span class="adj-label">REPS</span><button class="btn-adj" onclick="modReps(${i},-1)">−</button><span class="val-display" id="r_${i}">${ex.reps}</span><button class="btn-adj" onclick="modReps(${i},1)">+</button></div></div>
+                </div>
+                <div class="stats-row"><span>VOL <span class="stat-val" id="vol_${i}">${ex.totalVol.toLocaleString()}</span></span><span>TIME <span class="stat-val" id="time_${i}">${ex.totalTime}s</span></span></div>
+                <div class="track">${bars}</div>
+                <div class="set-logs" id="logs_${i}"></div>
+            </div>`;
         });
     }
 
     function sendToCloud(ex,w,r,t){
-        var fd=new URLSearchParams(); fd.append('timestamp',new Date().toLocaleString()); fd.append('workout',CURRENT_TYPE); fd.append('exercise',ex); fd.append('weight',w); fd.append('reps',r); fd.append('time',t);
+        if(GOOGLE_SCRIPT_URL === "PASTE_YOUR_NEW_URL_HERE") return; // Safety check
+        
         var s=document.getElementById('sync-status'); if(s){s.style.opacity=1;s.innerText="SYNCING...";}
-        fetch(GOOGLE_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:fd.toString()})
-        .then(()=>{if(s){s.innerText="LOGGED";setTimeout(()=>s.style.opacity=0,2000);}}).catch(()=>{if(s)s.innerText="OFFLINE";});
+        
+        // GET Method: Append params to URL
+        var params = `?timestamp=${encodeURIComponent(new Date().toLocaleString())}&workout=${CURRENT_TYPE}&exercise=${encodeURIComponent(ex)}&weight=${w}&reps=${r}&time=${t}`;
+        
+        fetch(GOOGLE_SCRIPT_URL + params, { method: 'GET', mode: 'no-cors' })
+        .then(()=>{if(s){s.innerText="LOGGED";setTimeout(()=>s.style.opacity=0,2000);}})
+        .catch(()=>{if(s)s.innerText="OFFLINE";});
     }
 </script>
 </body>
