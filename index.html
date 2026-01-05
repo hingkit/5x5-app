@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Protocol v23 Technical</title>
+    <title>Protocol v25 Tech</title>
     <style>
-        /* --- TECHNICAL LUXURY THEME (Alo/Kit&Ace) --- */
+        /* --- TECHNICAL LUXURY THEME (Alo/Kit&Ace 2025) --- */
         :root { 
             --bg: #fdfbf7;        /* Bone White */
             --card: #ffffff;      /* Pure White */
@@ -88,7 +88,7 @@
         /* TRACKS - Thin & precise */
         .track { display: flex; gap: 4px; height: 4px; width: 100%; margin-top: 8px; }
         .seg { flex: 1; background: var(--track); border-radius: 1px; transition: 0.3s; }
-        .seg.active { background: var(--accent); }
+        .seg.active { background: var(--copper); } /* Copper for progress */
         .seg.done { background: #d4d4d4; }
 
         /* LOG BADGES - Technical Tags */
@@ -119,7 +119,7 @@
         /* STATES */
         .st-lift { background: var(--accent) !important; color: #fff !important; }
         .st-rest { background: #fff !important; color: var(--text) !important; border: 2px solid var(--accent); }
-        .st-gold { background: var(--copper) !important; color: #fff !important; border: none !important;}
+        .st-gold { background: var(--copper) !important; color: #fff !important; border: none !important; box-shadow: 0 10px 50px rgba(180, 83, 9, 0.4) !important; }
 
         /* VICTORY LAYER */
         #victory-layer { display: none; padding-top: 80px; animation: fadeIn 0.8s ease-out; }
@@ -148,10 +148,8 @@
 
     <div id="victory-layer">
         <div class="victory-title">SESSION<br>COMPLETE</div>
-        
         <div class="vic-label">Volume Moved</div>
         <div class="victory-val"><span id="vic-vol">0</span> <span style="font-size:1rem;color:#999;">lbs</span></div>
-        
         <div class="vic-label">Focus Time</div>
         <div class="victory-val" id="vic-time">00:00</div>
     </div>
@@ -180,6 +178,7 @@
     const DEFAULT_A=[{name:"Squat",w:75,sets:5,reps:5,cue:"Knees out. Chest up.",rest:"Walk it off."},{name:"Bench Press",w:85,sets:5,reps:5,cue:"Leg drive. Explode.",rest:"Open chest."},{name:"Barbell Row",w:65,sets:5,reps:5,cue:"Flat back. Pull to hips.",rest:"Relax back."},{name:"Face Pulls",w:20,sets:3,reps:12,cue:"Squeeze rear delts.",rest:"Deep breath."},{name:"Tri Pushdown",w:30,sets:3,reps:12,cue:"Lock elbows.",rest:"Shake arms."}];
     const DEFAULT_B=[{name:"Squat",w:75,sets:5,reps:5,cue:"Knees out. Chest up.",rest:"Walk it off."},{name:"Overhead Press",w:45,sets:5,reps:5,cue:"Squeeze glutes.",rest:"Shake shoulders."},{name:"Deadlift",w:135,sets:1,reps:5,cue:"Drag bar up legs.",rest:"Deep breaths."},{name:"Chin Ups",w:0,sets:3,reps:8,cue:"Chin over bar.",rest:"Shake arms."},{name:"Bicep Curls",w:20,sets:3,reps:12,cue:"Squeeze at top.",rest:"Relax."}];
     
+    // SAFETY INIT
     var CURRENT_ROUTINE=JSON.parse(JSON.stringify(DEFAULT_A));
     var CURRENT_TYPE='A';
     var currentEx=0, currentSet=0, step=0, sessionSecs=0, liftSecs=0, liftInt=null, restInt=null, sessionTotalVol=0;
@@ -187,20 +186,22 @@
     // --- AUTO START ---
     window.addEventListener('load',function(){
         try{
-            var savedA=localStorage.getItem('protocol_v23_A');
+            var savedA=localStorage.getItem('protocol_v25_A');
             if(savedA) CURRENT_ROUTINE=JSON.parse(savedA);
-        }catch(e){}
+        }catch(e){ console.log("Fresh Start"); }
+        
         renderList();
         setInterval(function(){sessionSecs++;document.getElementById('session-timer').innerText=fmt(sessionSecs);},1000);
         highlightCard(0); updateBtn(0);
     });
 
-    // --- MAIN ENGINE ---
+    // --- ENGINE ---
     function handleAction(){
         if(document.getElementById('victory-layer').style.display==='block'){
             if(confirm("Start new session?")) location.reload();
             return;
         }
+
         var ex=CURRENT_ROUTINE[currentEx];
         if(step===0){ // Ready -> Lift
             step=1;
@@ -245,7 +246,7 @@
 
     function triggerVictory(){
         document.getElementById('list').style.display='none';
-        document.getElementById('main-header').style.display='none';
+        document.getElementById('main-header').style.opacity='0';
         document.getElementById('victory-layer').style.display='block';
         document.getElementById('vic-vol').innerText=sessionTotalVol.toLocaleString();
         document.getElementById('vic-time').innerText=fmt(sessionSecs);
@@ -257,33 +258,34 @@
             CURRENT_TYPE=type;
             if(type==='A'){
                 CURRENT_ROUTINE=JSON.parse(JSON.stringify(DEFAULT_A));
-                try{ var s=localStorage.getItem('protocol_v23_A'); if(s) CURRENT_ROUTINE=JSON.parse(s); }catch(e){}
+                try{ var s=localStorage.getItem('protocol_v25_A'); if(s) CURRENT_ROUTINE=JSON.parse(s); }catch(e){}
                 document.getElementById('btnA').classList.add('active'); document.getElementById('btnB').classList.remove('active');
             }else{
                 CURRENT_ROUTINE=JSON.parse(JSON.stringify(DEFAULT_B));
-                try{ var s=localStorage.getItem('protocol_v23_B'); if(s) CURRENT_ROUTINE=JSON.parse(s); }catch(e){}
+                try{ var s=localStorage.getItem('protocol_v25_B'); if(s) CURRENT_ROUTINE=JSON.parse(s); }catch(e){}
                 document.getElementById('btnB').classList.add('active'); document.getElementById('btnA').classList.remove('active');
             }
             currentEx=0; currentSet=0; step=0; renderList(); highlightCard(0); updateBtn(0);
         }
     }
 
-    // --- UI HELPERS ---
     function updateBtn(i){ var ex=CURRENT_ROUTINE[i]; setBtn("START SET "+(currentSet+1),"TARGET: "+ex.reps+" @ "+ex.w+" LBS","","UP"); }
+    
     function setBtn(m,s,c,i){ 
         var b=document.getElementById('actionBtn'); if(!b)return; b.className=c; 
         document.getElementById('btnMain').innerText=m; document.getElementById('btnSub').innerText=s; 
         document.getElementById('btnIcon').innerHTML=ICONS[i]; 
         
-        // Dynamic Text Color for "Rest" state (Technical Grey)
+        // Text Color Logic
         if(c==='st-rest') { b.style.color='#171717'; document.getElementById('btnSub').style.color='#737373'; }
         else { b.style.color='#fff'; document.getElementById('btnSub').style.color='rgba(255,255,255,0.7)'; }
     }
+
     function modWeight(i,d){ CURRENT_ROUTINE[i].w=Math.max(0,CURRENT_ROUTINE[i].w+d); document.getElementById('w_'+i).innerText=CURRENT_ROUTINE[i].w; if(i===currentEx && step===0) updateBtn(i); }
     function modReps(i,d){ CURRENT_ROUTINE[i].reps=Math.max(0,CURRENT_ROUTINE[i].reps+d); document.getElementById('r_'+i).innerText=CURRENT_ROUTINE[i].reps; if(i===currentEx && step===0) updateBtn(i); }
     function highlightCard(i){ document.querySelectorAll('.card').forEach(c=>c.classList.remove('active')); var c=document.getElementById('card_'+i); if(c){ c.classList.add('active'); c.scrollIntoView({behavior:'smooth',block:'center'}); } }
     function fmt(s){ var m=Math.floor(s/60).toString().padStart(2,'0'), sc=(s%60).toString().padStart(2,'0'); return m+":"+sc; }
-    function saveLocal(){ if(CURRENT_TYPE==='A') localStorage.setItem('protocol_v23_A',JSON.stringify(CURRENT_ROUTINE)); else localStorage.setItem('protocol_v23_B',JSON.stringify(CURRENT_ROUTINE)); }
+    function saveLocal(){ if(CURRENT_TYPE==='A') localStorage.setItem('protocol_v25_A',JSON.stringify(CURRENT_ROUTINE)); else localStorage.setItem('protocol_v25_B',JSON.stringify(CURRENT_ROUTINE)); }
     
     function renderList(){
         var l=document.getElementById('list'); l.innerHTML="";
