@@ -5,18 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Protocol v29 Final</title>
+    <title>Protocol v31.1 Final</title>
     <style>
-        /* --- TECHNICAL LUXURY THEME (Bone/Onyx/Copper) --- */
+        /* --- TECHNICAL LUXURY THEME --- */
         :root { 
-            --bg: #fdfbf7;        /* Bone White */
-            --card: #ffffff;      /* Pure White */
-            --text: #171717;      /* Sharp Black */
-            --sub: #737373;       /* Technical Grey */
-            --accent: #171717;    /* Onyx (Action) */
-            --copper: #b45309;    /* Copper (Progress/Victory) */
-            --track: #e5e5e5;     /* Light Grey */
-            --border: #f0f0f0;    /* Subtle Borders */
+            --bg: #fdfbf7; --card: #ffffff; --text: #171717; --sub: #737373;
+            --accent: #171717; --copper: #b45309; --track: #e5e5e5; --border: #f0f0f0;
         }
         
         body { 
@@ -24,67 +18,37 @@
             background: var(--bg); color: var(--text); 
             margin: 0; padding: 24px; padding-bottom: 240px; 
             text-align: center; 
-            -webkit-font-smoothing: antialiased;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* HEADER */
-        header { margin-bottom: 30px; padding-top: 5px; transition: opacity 0.5s; }
+        header { margin-bottom: 30px; padding-top: 5px; }
         .meta-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         #date-display { font-size: 0.75rem; font-weight: 700; color: var(--sub); letter-spacing: 1px; text-transform: uppercase; }
         #session-timer { font-family: 'Courier New', monospace; font-size: 0.9rem; font-weight: 600; color: var(--copper); }
 
         .top-bar { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
-        
         .workout-switch { display: flex; gap: 20px; }
-        .switch-btn { 
-            background: transparent; border: none; 
-            font-size: 0.9rem; font-weight: 600; color: var(--sub); 
-            cursor: pointer; padding: 0; letter-spacing: 0.5px;
-            transition: color 0.2s; position: relative;
-        }
+        .switch-btn { background: transparent; border: none; font-size: 0.9rem; font-weight: 600; color: var(--sub); cursor: pointer; padding: 0; letter-spacing: 0.5px; transition: color 0.2s; position: relative; }
         .switch-btn.active { color: var(--accent); }
-        .switch-btn.active::after { 
-            content:''; position: absolute; bottom: -17px; left: 0; right: 0; 
-            height: 2px; background: var(--accent); 
-        }
-        
-        .rec-tag { 
-            font-size: 0.5rem; background: var(--copper); color: #fff; 
-            padding: 2px 4px; border-radius: 2px; position: absolute; 
-            top: -10px; right: -10px; opacity: 0; transition: opacity 0.3s;
-        }
+        .switch-btn.active::after { content:''; position: absolute; bottom: -17px; left: 0; right: 0; height: 2px; background: var(--accent); }
+        .rec-tag { font-size: 0.5rem; background: var(--copper); color: #fff; padding: 2px 4px; border-radius: 2px; position: absolute; top: -10px; right: -10px; opacity: 0; transition: opacity 0.3s; }
         .show-rec .rec-tag { opacity: 1; }
 
-        #sync-status { font-size: 0.65rem; color: var(--sub); text-align: right; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; height: 10px; opacity: 0; transition: opacity 0.5s; }
+        #debug-log { font-size: 0.6rem; color: var(--sub); text-align: left; margin-top: 20px; padding: 10px; border-top: 1px solid var(--border); opacity: 0.5; height: 50px; overflow: hidden; white-space: nowrap; }
 
         /* CARDS */
-        #list { display: flex; flex-direction: column; gap: 16px; padding-bottom: 100px; transition: opacity 0.5s; }
-        .card { 
-            background: var(--card); border: 1px solid var(--border); border-radius: 4px; 
-            padding: 24px; transition: 0.2s ease; position: relative; text-align: left;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
-        }
-        .card.active { 
-            border-color: var(--copper); 
-            box-shadow: 0 10px 30px rgba(180, 83, 9, 0.1); 
-            transform: translateY(-2px); z-index: 10; 
-        }
+        #list { display: flex; flex-direction: column; gap: 16px; padding-bottom: 100px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 24px; transition: 0.2s ease; position: relative; text-align: left; box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
+        .card.active { border-color: var(--copper); box-shadow: 0 10px 30px rgba(180, 83, 9, 0.1); transform: translateY(-2px); z-index: 10; }
 
-        /* CONTROLS */
         .controls-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .ex-name { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text); }
-        
         .prog-text { font-size: 0.7rem; font-weight: 700; color: var(--copper); letter-spacing: 1px; text-transform: uppercase; }
 
         .adjuster-group { display: flex; gap: 10px; margin-bottom: 10px;}
         .adj-ui { display: flex; align-items: center; gap: 8px; background: #f5f5f5; padding: 6px 10px; border-radius: 4px; }
         .adj-label { font-size: 0.6rem; color: var(--sub); font-weight: 700; letter-spacing: 0.5px; }
-        .btn-adj { 
-            width: 24px; height: 24px; border: none; background: #fff; 
-            color: var(--text); border-radius: 2px; font-size: 1.1rem; font-weight: 600; 
-            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
+        .btn-adj { width: 24px; height: 24px; border: none; background: #fff; color: var(--text); border-radius: 2px; font-size: 1.1rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .val-display { font-weight: 700; font-size: 1rem; min-width: 28px; text-align: center; font-variant-numeric: tabular-nums; }
 
         .stats-row { display: flex; gap: 24px; margin-bottom: 16px; font-size: 0.75rem; color: var(--sub); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
@@ -97,34 +61,13 @@
         .seg.done { background: var(--copper); } 
 
         .set-logs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
-        .log-badge { 
-            font-size: 0.65rem; font-weight: 600; background: #fff; color: var(--sub); 
-            padding: 4px 8px; border: 1px solid var(--border); border-radius: 2px; letter-spacing: 0.5px;
-        }
+        .log-badge { font-size: 0.65rem; font-weight: 600; background: #fff; color: var(--sub); padding: 4px 8px; border: 1px solid var(--border); border-radius: 2px; letter-spacing: 0.5px; }
 
         /* DASHBOARD */
-        #dashboard { 
-            position: fixed; bottom: 30px; left: 20px; right: 20px; 
-            display: flex; gap: 10px; align-items: stretch; z-index: 100;
-            transition: opacity 0.5s;
-        }
-
-        #actionBtn { 
-            flex: 1; height: 85px; 
-            background: var(--accent); color: #fff; border: none; border-radius: 4px; 
-            cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; 
-            padding: 0 25px; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-            transition: transform 0.1s;
-        }
+        #dashboard { position: fixed; bottom: 30px; left: 20px; right: 20px; display: flex; gap: 10px; align-items: stretch; z-index: 100; }
+        #actionBtn { flex: 1; height: 85px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; padding: 0 25px; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); transition: transform 0.1s; }
         #actionBtn:active { transform: scale(0.99); }
-        
-        #skipBtn {
-            width: 60px; background: #fff; border: 1px solid var(--border); border-radius: 4px;
-            color: var(--sub); font-weight: 700; font-size: 0.7rem; letter-spacing: 1px;
-            display: flex; align-items: center; justify-content: center; flex-direction: column;
-            cursor: pointer; box-shadow: 0 10px 40px rgba(0,0,0,0.05);
-            text-transform: uppercase;
-        }
+        #skipBtn { width: 60px; background: #fff; border: 1px solid var(--border); border-radius: 4px; color: var(--sub); font-weight: 700; font-size: 0.7rem; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; box-shadow: 0 10px 40px rgba(0,0,0,0.05); text-transform: uppercase; }
         #skipBtn:active { background: #f5f5f5; }
 
         .btn-icon-box { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
@@ -160,7 +103,7 @@
                 <button class="switch-btn" id="btnB" onclick="switchWorkout('B')">WORKOUT B <span class="rec-tag">REC</span></button>
             </div>
         </div>
-        <div id="sync-status"></div>
+        <div id="debug-log">Log: Ready</div>
     </header>
 
     <div id="list"></div>
@@ -187,17 +130,22 @@
         </button>
     </div>
 
-<script>
-    // --- YOUR URL ---
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQa2DcUfTAzmszUb02lB4dgneZvZpurgZszpl_NReTCD6ExcIrPtm_Y_yHhuviilqU/exec"; 
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+    <form id="dataForm" target="hidden_iframe" method="POST" style="display:none;">
+        <input type="text" name="timestamp" id="f_time">
+        <input type="text" name="workout" id="f_work">
+        <input type="text" name="exercise" id="f_ex">
+        <input type="text" name="weight" id="f_w">
+        <input type="text" name="reps" id="f_r">
+        <input type="text" name="time" id="f_t">
+    </form>
 
+<script>
     // --- ICONS ---
-    const ICONS={
-        UP:'<svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>',
-        LIFT:'<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-5h2V5h-2v6zm4 5h-2v-2h2v2zm0-5h2V5h-2v6z"/></svg>',
-        REST:'<svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>',
-        TROPHY:'<svg viewBox="0 0 24 24"><path d="M20.2 2H3.8c-1.1 0-2 .9-2 2s.9 2 2 2c0 .55.45 1 1 1s1-.45 1-1h12.4c0 .55.45 1 1 1s1-.45 1-1c1.1 0 2-.9 2-2s-.9-2-2-2zM19 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM5 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'
-    };
+    const ICONS={UP:'<svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>',LIFT:'<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-5h2V5h-2v6zm4 5h-2v-2h2v2zm0-5h2V5h-2v6z"/></svg>',REST:'<svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>',TROPHY:'<svg viewBox="0 0 24 24"><path d="M20.2 2H3.8c-1.1 0-2 .9-2 2s.9 2 2 2c0 .55.45 1 1 1s1-.45 1-1h12.4c0 .55.45 1 1 1s1-.45 1-1c1.1 0 2-.9 2-2s-.9-2-2-2zM19 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM5 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'};
+
+    // --- CONFIG ---
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQa2DcUfTAzmszUb02lB4dgneZvZpurgZszpl_NReTCD6ExcIrPtm_Y_yHhuviilqU/exec"; 
 
     // --- DEFAULTS ---
     const DEFAULT_A=[{name:"Squat",w:75,sets:5,reps:5,cue:"Knees out. Chest up.",rest:"Walk it off."},{name:"Bench Press",w:85,sets:5,reps:5,cue:"Leg drive. Explode.",rest:"Open chest."},{name:"Barbell Row",w:65,sets:5,reps:5,cue:"Flat back. Pull to hips.",rest:"Relax back."},{name:"Face Pulls",w:20,sets:3,reps:12,cue:"Squeeze rear delts.",rest:"Deep breath."},{name:"Tri Pushdown",w:30,sets:3,reps:12,cue:"Lock elbows.",rest:"Shake arms."}];
@@ -207,30 +155,28 @@
     var CURRENT_TYPE='A';
     var currentEx=0, currentSet=0, step=0, sessionSecs=0, liftSecs=0, liftInt=null, restInt=null, sessionTotalVol=0;
 
-    // --- AUTO START ---
     window.addEventListener('load',function(){
-        // Date
-        const d = new Date();
-        document.getElementById('date-display').innerText = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-
+        document.getElementById('date-display').innerText = new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+        
         // Smart Rec
         var last = localStorage.getItem('protocol_last_type');
         var rec = (last === 'A') ? 'B' : 'A';
         if(rec === 'A') document.getElementById('btnA').classList.add('show-rec');
         else document.getElementById('btnB').classList.add('show-rec');
 
-        // FORCE FRESH START to clear old cache conflicts
         try{
-            var savedA=localStorage.getItem('protocol_v28_A');
+            var savedA=localStorage.getItem('protocol_v31_A');
             if(savedA) CURRENT_ROUTINE=JSON.parse(savedA);
-        }catch(e){ console.log("Fresh Start"); }
+        }catch(e){ log("Fresh Start"); }
         
+        // Init Form
+        document.getElementById('dataForm').action = GOOGLE_SCRIPT_URL;
+
         renderList();
         setInterval(function(){sessionSecs++;document.getElementById('session-timer').innerText=fmt(sessionSecs);},1000);
         highlightCard(0); updateBtn(0);
     });
 
-    // --- ENGINE ---
     function handleAction(){
         if(document.getElementById('victory-layer').style.display==='block'){
             if(confirm("Start new session?")) location.reload();
@@ -248,7 +194,7 @@
             liftInt=setInterval(function(){liftSecs++;document.getElementById('time_'+currentEx).innerText=(ex.totalTime||0)+liftSecs+"s";},1000);
         }else if(step===1){ // Lift -> Rest
             step=2; clearInterval(liftInt);
-            finishSet(ex, liftSecs, ex.reps); // Normal Finish
+            finishSet(ex, liftSecs, ex.reps); 
         }else if(step===2){ // Rest -> Next
             clearInterval(restInt); nextSet();
         }
@@ -259,11 +205,10 @@
         if(step === 2) clearInterval(restInt);
         
         var ex = CURRENT_ROUTINE[currentEx];
-        finishSet(ex, 0, 0); // 0 time, 0 reps
+        finishSet(ex, 0, 0); 
     }
 
     function finishSet(ex, timeVal, repsVal) {
-        // Save Data
         ex.totalTime=(ex.totalTime||0)+timeVal;
         document.getElementById('time_'+currentEx).className="stat-val";
         document.getElementById('time_'+currentEx).innerText=ex.totalTime+"s";
@@ -277,7 +222,7 @@
         document.getElementById('logs_'+currentEx).innerHTML+=`<div class="log-badge">${badgeText}</div>`;
         document.getElementById('seg_'+currentEx+'_'+currentSet).className="seg done";
         
-        // Log to Cloud (GET Method with Cache Buster)
+        // --- IRONCLAD LOGGING ---
         if(repsVal > 0) sendToCloud(ex.name, ex.w, repsVal, timeVal);
         saveLocal();
         
@@ -297,18 +242,16 @@
         currentSet++;
         if(currentSet>=CURRENT_ROUTINE[currentEx].sets){ currentSet=0; currentEx++; }
         if(currentEx>=CURRENT_ROUTINE.length){ triggerVictory(); return; }
-        
         step=0; highlightCard(currentEx); updateBtn(currentEx);
     }
 
     function triggerVictory(){
         document.getElementById('list').style.display='none';
         document.getElementById('main-header').style.opacity='0';
-        document.getElementById('dashboard').style.display='none'; // Hide controls
+        document.getElementById('dashboard').style.display='none'; 
         document.getElementById('victory-layer').style.display='block';
         document.getElementById('vic-vol').innerText=sessionTotalVol.toLocaleString();
         document.getElementById('vic-time').innerText=fmt(sessionSecs);
-        
         localStorage.setItem('protocol_last_type', CURRENT_TYPE);
     }
 
@@ -317,18 +260,17 @@
             CURRENT_TYPE=type;
             if(type==='A'){
                 CURRENT_ROUTINE=JSON.parse(JSON.stringify(DEFAULT_A));
-                try{ var s=localStorage.getItem('protocol_v28_A'); if(s) CURRENT_ROUTINE=JSON.parse(s); }catch(e){}
+                try{ var s=localStorage.getItem('protocol_v31_A'); if(s) CURRENT_ROUTINE=JSON.parse(s); }catch(e){}
                 document.getElementById('btnA').classList.add('active'); document.getElementById('btnB').classList.remove('active');
             }else{
                 CURRENT_ROUTINE=JSON.parse(JSON.stringify(DEFAULT_B));
-                try{ var s=localStorage.getItem('protocol_v28_B'); if(s) CURRENT_ROUTINE=JSON.parse(s); }catch(e){}
+                try{ var s=localStorage.getItem('protocol_v31_B'); if(s) CURRENT_ROUTINE=JSON.parse(s); }catch(e){}
                 document.getElementById('btnB').classList.add('active'); document.getElementById('btnA').classList.remove('active');
             }
             currentEx=0; currentSet=0; step=0; renderList(); highlightCard(0); updateBtn(0);
         }
     }
 
-    // --- UI HELPERS ---
     function updateBtn(i){ var ex=CURRENT_ROUTINE[i]; setBtn("START SET "+(currentSet+1),"TARGET: "+ex.reps+" @ "+ex.w+" LBS","","UP"); }
     
     function setBtn(m,s,c,i){ 
@@ -344,16 +286,15 @@
     function modReps(i,d){ CURRENT_ROUTINE[i].reps=Math.max(0,CURRENT_ROUTINE[i].reps+d); document.getElementById('r_'+i).innerText=CURRENT_ROUTINE[i].reps; if(i===currentEx && step===0) updateBtn(i); }
     function highlightCard(i){ document.querySelectorAll('.card').forEach(c=>c.classList.remove('active')); var c=document.getElementById('card_'+i); if(c){ c.classList.add('active'); c.scrollIntoView({behavior:'smooth',block:'center'}); } }
     function fmt(s){ var m=Math.floor(s/60).toString().padStart(2,'0'), sc=(s%60).toString().padStart(2,'0'); return m+":"+sc; }
-    function saveLocal(){ if(CURRENT_TYPE==='A') localStorage.setItem('protocol_v28_A',JSON.stringify(CURRENT_ROUTINE)); else localStorage.setItem('protocol_v28_B',JSON.stringify(CURRENT_ROUTINE)); }
-    
+    function saveLocal(){ if(CURRENT_TYPE==='A') localStorage.setItem('protocol_v31_A',JSON.stringify(CURRENT_ROUTINE)); else localStorage.setItem('protocol_v31_B',JSON.stringify(CURRENT_ROUTINE)); }
+    function log(msg) { document.getElementById('debug-log').innerText = "Log: " + msg; }
+
     function renderList(){
         var l=document.getElementById('list'); l.innerHTML="";
         CURRENT_ROUTINE.forEach((ex,i)=>{
             ex.totalVol=ex.totalVol||0; ex.totalTime=ex.totalTime||0;
             var bars=""; for(var b=0;b<ex.sets;b++) bars+=`<div class="seg" id="seg_${i}_${b}"></div>`;
-            
-            var progText = "";
-            if(i === currentEx) progText = `<div class="prog-text">SET ${currentSet+1} / ${ex.sets}</div>`;
+            var progText = (i === currentEx) ? `<div class="prog-text">SET ${currentSet+1} / ${ex.sets}</div>` : "";
 
             l.innerHTML+=`
             <div class="card" id="card_${i}">
@@ -373,14 +314,20 @@
     }
 
     function sendToCloud(ex,w,r,t){
-        var s=document.getElementById('sync-status'); if(s){s.style.opacity=1;s.innerText="SYNCING...";}
+        if(GOOGLE_SCRIPT_URL === "PASTE_YOUR_NEW_URL_HERE") { log("Error: Config URL"); return; }
         
-        // GET Method + Cache Buster (uid)
-        var params = `?timestamp=${encodeURIComponent(new Date().toLocaleString())}&workout=${CURRENT_TYPE}&exercise=${encodeURIComponent(ex)}&weight=${w}&reps=${r}&time=${t}&uid=${Date.now()}`;
+        // FILL HIDDEN FORM
+        document.getElementById('f_time').value = new Date().toLocaleString();
+        document.getElementById('f_work').value = CURRENT_TYPE;
+        document.getElementById('f_ex').value = ex;
+        document.getElementById('f_w').value = w;
+        document.getElementById('f_r').value = r;
+        document.getElementById('f_t').value = t;
         
-        fetch(GOOGLE_SCRIPT_URL + params, { method: 'GET', mode: 'no-cors' })
-        .then(()=>{if(s){s.innerText="LOGGED";setTimeout(()=>s.style.opacity=0,2000);}})
-        .catch(()=>{if(s)s.innerText="OFFLINE";});
+        // SUBMIT FORM TO HIDDEN IFRAME
+        document.getElementById('dataForm').submit();
+        
+        log("Sent: " + ex);
     }
 </script>
 </body>
