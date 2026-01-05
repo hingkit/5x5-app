@@ -1,68 +1,148 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Protocol v10</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Protocol v11</title>
     <style>
-        /* DARK MODE to verify update */
-        body { background-color: #000000; color: #ffffff; font-family: sans-serif; padding: 20px; text-align: center; }
-        .card { background: #1c1c1e; padding: 20px; margin: 15px 0; border-radius: 12px; border: 1px solid #333; text-align: left; }
-        .btn { background: #0a84ff; color: white; padding: 15px; width: 100%; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: bold; margin-top: 20px; cursor: pointer; }
-        .bubble { display: inline-block; width: 20px; height: 20px; background: #333; border-radius: 50%; margin-right: 5px; }
-        .bubble.done { background: #30d158; }
+        :root { --bg: #f2f2f7; --card: #ffffff; --text: #000; --accent: #007aff; --active: #ffcc00; --success: #34c759; --rest: #1c1c1e; }
+        body { background: var(--bg); color: var(--text); padding: 20px; padding-bottom: 180px; margin: 0; font-family: -apple-system, system-ui, sans-serif; }
+
+        /* HEADER */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h1 { font-size: 1.8rem; font-weight: 800; margin: 0; }
+        .timer-badge { background: #e5e5ea; padding: 5px 10px; border-radius: 8px; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .version-tag { font-size: 0.7rem; background: #000; color: #fff; padding: 2px 6px; border-radius: 4px; vertical-align: middle; }
+
+        /* CARDS */
+        .card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.3s; border: 2px solid transparent; }
+        .card.focused { border-color: var(--accent); box-shadow: 0 4px 12px rgba(0,122,255,0.2); transform: scale(1.01); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .ex-name { font-size: 1.1rem; font-weight: 700; }
+
+        /* WEIGHT UI */
+        .weight-control { display: flex; align-items: center; background: #f2f2f7; border-radius: 8px; padding: 2px; }
+        .btn-adj { width: 30px; height: 30px; border: none; background: #fff; border-radius: 6px; font-weight: bold; color: var(--accent); cursor: pointer; }
+        .weight-val { width: 45px; text-align: center; font-weight: 700; font-size: 1.1rem; border: none; background: transparent; }
+
+        /* BUBBLES */
+        .bubbles { display: flex; gap: 6px; }
+        .bubble { flex: 1; height: 32px; background: #e5e5ea; border-radius: 6px; border: 1px solid #d1d1d6; transition: 0.2s; }
+        .bubble.active { background: var(--active); border-color: #e6b800; box-shadow: 0 0 8px rgba(255, 204, 0, 0.5); }
+        .bubble.done { background: var(--success); border-color: #248a3d; }
+
+        /* MEGA BUTTON */
+        .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 20px; background: rgba(242,242,247,0.95); border-top: 1px solid #ccc; backdrop-filter: blur(10px); z-index: 100; }
+        
+        #megaBtn { width: 100%; height: 75px; border: none; border-radius: 14px; color: white; font-size: 1.2rem; font-weight: 800; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: background 0.3s; }
+        #megaBtn span { font-size: 0.8rem; font-weight: 500; opacity: 0.9; margin-top: 2px; }
+
+        /* STATES */
+        .state-ready { background: #000; }
+        .state-lift { background: var(--active); color: #000 !important; }
+        .state-rest { background: var(--rest); }
+        .state-finish { background: var(--success); }
+
+        .reset-link { text-align: center; margin-top: 30px; font-size: 0.8rem; color: #999; text-decoration: underline; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <h1 style="color: #0a84ff;">v10: Dark Mode Check</h1>
-    <p id="status" style="color: #666;">Waiting for JS...</p>
+    <header>
+        <h1>Workout <span id="routineLabel">A</span> <span class="version-tag">v11</span></h1>
+        <div class="timer-badge" id="sessionTimer">00:00</div>
+    </header>
 
-    <div id="app-container"></div>
+    <div id="app-content"></div>
 
-    <button class="btn" onclick="runWorkout()">START WORKOUT</button>
+    <div class="reset-link" onclick="hardReset()">Factory Reset App</div>
+
+    <div class="footer-bar">
+        <button id="megaBtn" class="state-ready" onclick="handleMegaClick()">
+            START WORKOUT
+            <span>Tap to begin Set 1</span>
+        </button>
+    </div>
 
 <script>
-    // 1. Immediate Alert to prove JS is alive
-    document.getElementById('status').innerText = "System Online";
-    document.getElementById('status').style.color = "#30d158";
+    // --- 1. CONFIGURATION ---
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQa2DcUfTAzmszUb02lB4dgneZvZpurgZszpl_NReTCD6ExcIrPtm_Y_yHhuviilqU/exec";
+    
+    const WORKOUTS = {
+        A: [
+            { name: "Squat", sets: 5, id: "squat" },
+            { name: "Bench Press", sets: 5, id: "bench" },
+            { name: "Barbell Row", sets: 5, id: "row" },
+            { name: "Face Pulls", sets: 3, id: "facepull" },
+            { name: "Tri Pushdown", sets: 3, id: "tricep" }
+        ],
+        B: [
+            { name: "Squat", sets: 5, id: "squat" },
+            { name: "Overhead Press", sets: 5, id: "ohp" },
+            { name: "Deadlift", sets: 1, id: "deadlift" },
+            { name: "Lat Pulldown", sets: 3, id: "latpull" },
+            { name: "Bicep Curl", sets: 3, id: "curl" }
+        ]
+    };
 
-    // 2. HARDCODED DATA (No LocalStorage)
-    var exercises = [
-        { name: "Squat", sets: 5, weight: 75 },
-        { name: "Bench Press", sets: 5, weight: 85 },
-        { name: "Barbell Row", sets: 5, weight: 65 }
-    ];
+    // --- 2. STATE ---
+    let appState = JSON.parse(localStorage.getItem('v11_data')) || {
+        routine: 'A',
+        weights: { squat: 75, bench: 85, row: 65, ohp: 45, deadlift: 135, facepull: 20, tricep: 30, latpull: 70, curl: 25 },
+        durations: {}
+    };
 
-    // 3. Simple Render Function
-    function runWorkout() {
-        var container = document.getElementById('app-container');
-        container.innerHTML = ""; // Clear
+    // Runtime variables
+    let currentFocus = { exIdx: 0, setIdx: 0, status: 'ready' };
+    let sessionSecs = 0;
+    let setStartTimestamp = 0;
+    let restInterval = null;
+
+    // --- 3. CORE FUNCTIONS ---
+    function init() {
+        renderList();
+        findNextTarget();
         
-        // Loop through data
-        for (var i = 0; i < exercises.length; i++) {
-            var ex = exercises[i];
-            
-            // Build bubbles manually
-            var bubblesHTML = "";
-            for(var b=0; b<ex.sets; b++) {
-                bubblesHTML += '<div class="bubble"></div>';
+        // Start Session Timer
+        setInterval(() => {
+            sessionSecs++;
+            const m = Math.floor(sessionSecs / 60).toString().padStart(2,'0');
+            const s = (sessionSecs % 60).toString().padStart(2,'0');
+            document.getElementById('sessionTimer').innerText = `${m}:${s}`;
+        }, 1000);
+    }
+
+    function renderList() {
+        const container = document.getElementById('app-content');
+        container.innerHTML = "";
+        
+        document.getElementById('routineLabel').innerText = appState.routine;
+        const currentRoutine = WORKOUTS[appState.routine];
+
+        currentRoutine.forEach((ex, idx) => {
+            let bubblesHTML = "";
+            for(let i=0; i<ex.sets; i++) {
+                bubblesHTML += `<div class="bubble" id="bubble_${idx}_${i}"></div>`;
             }
 
-            // Create HTML string
-            var card = document.createElement('div');
+            const card = document.createElement('div');
             card.className = "card";
-            card.innerHTML = "<h3>" + ex.name + "</h3>" +
-                             "<p>" + ex.weight + " lbs</p>" +
-                             "<div>" + bubblesHTML + "</div>";
-            
+            card.id = `card_${idx}`;
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="ex-name">${ex.name}</div>
+                    <div class="weight-control">
+                        <button class="btn-adj" onclick="changeWeight('${ex.id}', -5)">-</button>
+                        <input class="weight-val" id="val_${ex.id}" value="${appState.weights[ex.id]}" readonly>
+                        <button class="btn-adj" onclick="changeWeight('${ex.id}', 5)">+</button>
+                    </div>
+                </div>
+                <div class="bubbles">${bubblesHTML}</div>
+            `;
             container.appendChild(card);
-        }
-
-        // Change Button
-        document.querySelector('.btn').innerText = "SYNC COMPLETE (TEST)";
-        document.querySelector('.btn').style.background = "#30d158";
+        });
     }
-</script>
 
-</body>
-</html>
+    // --- 4. LOGIC ENGINE ---
+    function findNextTarget() {
