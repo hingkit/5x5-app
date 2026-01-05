@@ -1,140 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Protocol v9 Debug</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protocol v10</title>
     <style>
-        body { background: #f2f2f7; color: #000; padding: 20px; font-family: -apple-system, system-ui, sans-serif; padding-bottom: 200px; }
-        
-        /* DEBUG BOXES */
-        #error-box { display: none; background: #ff3b30; color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: bold; }
-        #status-log { font-family: monospace; font-size: 0.75rem; color: #666; background: #eee; padding: 10px; border-radius: 8px; margin-top: 20px; height: 100px; overflow-y: scroll; }
-
-        /* APP UI */
-        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .row { display: flex; justify-content: space-between; align-items: center; }
-        .bubbles { display: flex; gap: 5px; margin-top: 10px; }
-        .bubble { height: 30px; flex: 1; background: #eee; border-radius: 5px; border: 1px solid #ddd; }
-        .bubble.active { background: #ffcc00; }
-        .bubble.done { background: #34c759; }
-        
-        button#megaBtn { position: fixed; bottom: 20px; left: 20px; right: 20px; height: 70px; width: calc(100% - 40px); background: #000; color: white; border: none; border-radius: 16px; font-size: 1.2rem; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 100; }
+        /* DARK MODE to verify update */
+        body { background-color: #000000; color: #ffffff; font-family: sans-serif; padding: 20px; text-align: center; }
+        .card { background: #1c1c1e; padding: 20px; margin: 15px 0; border-radius: 12px; border: 1px solid #333; text-align: left; }
+        .btn { background: #0a84ff; color: white; padding: 15px; width: 100%; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: bold; margin-top: 20px; cursor: pointer; }
+        .bubble { display: inline-block; width: 20px; height: 20px; background: #333; border-radius: 50%; margin-right: 5px; }
+        .bubble.done { background: #30d158; }
     </style>
 </head>
 <body>
 
-    <div id="error-box"></div>
+    <h1 style="color: #0a84ff;">v10: Dark Mode Check</h1>
+    <p id="status" style="color: #666;">Waiting for JS...</p>
 
-    <h1>Workout A <span style="font-size:0.8rem; background:blue; color:white; padding:2px 6px; border-radius:4px;">v9.0</span></h1>
-    
-    <div id="exerciseList"></div>
-    
-    <div id="status-log">Initializing...</div>
+    <div id="app-container"></div>
 
-    <button id="megaBtn" onclick="handleAction()">Start Workout</button>
+    <button class="btn" onclick="runWorkout()">START WORKOUT</button>
 
 <script>
-    // --- 1. ERROR TRAPPING (Must be first) ---
-    function log(msg) {
-        const el = document.getElementById('status-log');
-        el.innerHTML += "<div>> " + msg + "</div>";
-        el.scrollTop = el.scrollHeight;
-        console.log(msg);
-    }
+    // 1. Immediate Alert to prove JS is alive
+    document.getElementById('status').innerText = "System Online";
+    document.getElementById('status').style.color = "#30d158";
 
-    window.onerror = function(message, source, lineno, colno, error) {
-        const box = document.getElementById('error-box');
-        box.style.display = 'block';
-        box.innerHTML = `⚠️ CRASH DETECTED:<br>${message}<br>Line: ${lineno}`;
-        return false;
-    };
+    // 2. HARDCODED DATA (No LocalStorage)
+    var exercises = [
+        { name: "Squat", sets: 5, weight: 75 },
+        { name: "Bench Press", sets: 5, weight: 85 },
+        { name: "Barbell Row", sets: 5, weight: 65 }
+    ];
 
-    // --- 2. DATA ---
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQa2DcUfTAzmszUb02lB4dgneZvZpurgZszpl_NReTCD6ExcIrPtm_Y_yHhuviilqU/exec";
-    
-    const config = {
-        A: [
-            { name: "Squat", sets: 5, id: "squat" },
-            { name: "Bench Press", sets: 5, id: "bench" },
-            { name: "Barbell Row", sets: 5, id: "row" },
-            { name: "Face Pulls", sets: 3, id: "facepull" },
-            { name: "Tri Pushdown", sets: 3, id: "tricep" }
-        ],
-        B: [
-            { name: "Squat", sets: 5, id: "squat" },
-            { name: "OHP", sets: 5, id: "ohp" },
-            { name: "Deadlift", sets: 1, id: "deadlift" },
-            { name: "Lat Pulldown", sets: 3, id: "latpull" },
-            { name: "Curls", sets: 3, id: "curl" }
-        ]
-    };
-
-    // --- 3. HARD RESET STATE ---
-    // We are NOT loading from localStorage to prove the code works.
-    let state = {
-        currentRoutine: 'A',
-        weights: { squat: 75, bench: 85, row: 65, ohp: 45, deadlift: 135, facepull: 20, tricep: 30, latpull: 70, curl: 25 },
-        durations: {}
-    };
-
-    let currentTarget = { exIndex: 0, setIndex: 0, status: 'ready' };
-    let startTime = 0;
-    let timerInt = null;
-
-    // --- 4. RENDER ENGINE ---
-    function init() {
-        log("Init started");
+    // 3. Simple Render Function
+    function runWorkout() {
+        var container = document.getElementById('app-container');
+        container.innerHTML = ""; // Clear
         
-        const list = document.getElementById('exerciseList');
-        const routine = config[state.currentRoutine];
-        
-        log(`Routine: ${state.currentRoutine}, Items: ${routine.length}`);
-
-        routine.forEach((ex, idx) => {
-            log(`Rendering ${ex.name}...`);
+        // Loop through data
+        for (var i = 0; i < exercises.length; i++) {
+            var ex = exercises[i];
             
-            // Build Bubbles
-            let bubbles = "";
-            for(let i=0; i<ex.sets; i++) {
-                bubbles += `<div class="bubble" id="b_${idx}_${i}"></div>`;
+            // Build bubbles manually
+            var bubblesHTML = "";
+            for(var b=0; b<ex.sets; b++) {
+                bubblesHTML += '<div class="bubble"></div>';
             }
 
-            // Create Card
-            const div = document.createElement('div');
-            div.className = "card";
-            div.innerHTML = `
-                <div class="row">
-                    <b>${ex.name}</b>
-                    <span>${state.weights[ex.id]} lbs</span>
-                </div>
-                <div class="bubbles">${bubbles}</div>
-            `;
-            list.appendChild(div);
-        });
-
-        log("Render Complete");
-        highlightNext();
-    }
-
-    // --- 5. INTERACTION ---
-    function highlightNext() {
-        // Reset all bubbles visually (simple redraw)
-        document.querySelectorAll('.bubble').forEach(b => {
-            b.className = 'bubble'; // clear active
-        });
-        
-        // Mark past ones done
-        for(let e=0; e<config.A.length; e++) {
-            for(let s=0; s<5; s++) {
-                const b = document.getElementById(`b_${e}_${s}`);
-                if(b && (e < currentTarget.exIndex || (e===currentTarget.exIndex && s < currentTarget.setIndex))) {
-                    b.classList.add('done');
-                }
-            }
+            // Create HTML string
+            var card = document.createElement('div');
+            card.className = "card";
+            card.innerHTML = "<h3>" + ex.name + "</h3>" +
+                             "<p>" + ex.weight + " lbs</p>" +
+                             "<div>" + bubblesHTML + "</div>";
+            
+            container.appendChild(card);
         }
 
-        // Highlight Current
-        const curB = document.getElementById(`b_${currentTarget.exIndex}_${currentTarget.setIndex}`);
-        if(curB) {
-            if(currentTarget.status === 'lifting') curB.classList.add('active');
+        // Change Button
+        document.querySelector('.btn').innerText = "SYNC COMPLETE (TEST)";
+        document.querySelector('.btn').style.background = "#30d158";
+    }
+</script>
+
+</body>
+</html>
