@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Protocol 5x5</title>
+    <style>
+        /* APP STYLING (Clean Light Mode) */
+        :root { --bg-color: #f2f2f7; --card-bg: #ffffff; --text-main: #000000; --text-sub: #8e8e93; --accent: #007aff; --success: #34c759; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; padding-bottom: 120px; max-width: 600px; margin: 0 auto; }
+        
+        header { margin-bottom: 25px; }
+        h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 5px; }
+        p.subtitle { color: var(--text-sub); font-size: 1rem; font-weight: 500; }
+
+        .card { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .ex-name { font-size: 1.2rem; font-weight: 700; }
+        .ex-tag { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; font-weight: 700; text-transform: uppercase; background: #f2f2f7; color: #666; }
+        
+        .weight-control { display: flex; align-items: center; gap: 10px; background: #f2f2f7; padding: 5px 10px; border-radius: 10px; }
+        input[type="number"] { background: transparent; border: none; font-size: 1.3rem; font-weight: 700; width: 60px; text-align: center; color: var(--text-main); outline: none; }
+        .unit { font-size: 0.8rem; font-weight: 600; color: #888; }
+
+        .sets-container { display: flex; justify-content: space-between; gap: 5px; margin-top: 10px; }
+        .set-bubble { height: 40px; flex-grow: 1; border-radius: 8px; border: 2px solid #e5e5ea; background: transparent; cursor: pointer; transition: all 0.2s; }
+        .set-bubble.active { background-color: var(--accent); border-color: var(--accent); }
+
+        .fab-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px; z-index: 100; }
+        button#finishBtn { width: 100%; background-color: var(--text-main); color: white; border: none; padding: 18px; font-size: 1.1rem; font-weight: 700; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: background-color 0.3s; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1 id="workoutTitle">Workout A</h1>
+        <p class="subtitle" id="nextWorkoutMsg">Next: Workout B</p>
+    </header>
+
+    <div id="exerciseList"></div>
+
+    <div class="fab-container">
+        <button id="finishBtn" onclick="finishWorkout()">Complete Workout</button>
+    </div>
+
+<script>
+    // --- 1. CONFIGURATION ---
+    
+    // !!! PASTE YOUR DEPLOYED GOOGLE SCRIPT URL BETWEEN THE QUOTES BELOW !!!
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQa2DcUfTAzmszUb02lB4dgneZvZpurgZszpl_NReTCD6ExcIrPtm_Y_yHhuviilqU/exec";
+
+    const config = {
+        A: [
+            { name: "Squat", sets: 5, type: "rack", id: "squat" },
+            { name: "Bench Press", sets: 5, type: "rack", id: "bench" },
+            { name: "Barbell Row", sets: 5, type: "rack", id: "row" },
+            { name: "Face Pulls", sets: 3, type: "pulley", id: "facepull" },
+            { name: "Tri Pushdown", sets: 3, type: "pulley", id: "tricep" }
+        ],
+        B: [
+            { name: "Squat", sets: 5, type: "rack", id: "squat" },
+            { name: "Overhead Press", sets: 5, type: "rack", id: "ohp" },
+            { name: "Deadlift", sets: 1, type: "rack", id: "deadlift" },
+            { name: "Lat Pulldown", sets: 3, type: "pulley", id: "latpull" },
+            { name: "Bicep Curl", sets: 3, type: "pulley", id: "curl" }
+        ]
+    };
+
+    // --- 2. STATE (Calibrated for Restart) ---
+    let state = JSON.parse(localStorage.getItem('sf_workout_v4')) || {
+        currentRoutine: 'A',
+        // Starting weights calibrated for 160lb male, 40+, returning to gym
+        weights: { 
+            squat: 75,    
+            bench: 85,    
+            row: 65,      
+            ohp: 45,      
+            deadlift: 135,
+            facepull: 20, 
+            tricep: 30, 
+            latpull: 70, 
+            curl: 25 
+        }
+    };
+
+    // --- 3. APP LOGIC ---
+    function render() {
+        document.getElementById('workoutTitle').innerText = `Workout ${state.currentRoutine}`;
+        document.getElementById('nextWorkoutMsg').innerText = `Up Next: Workout ${state.currentRoutine === 'A' ? 'B' : 'A'}`;
+        
+        const list = document.getElementById('exerciseList');
+        list.innerHTML = '';
+
+        config[state.currentRoutine].forEach(ex => {
+            let bubblesHtml = '';
+            for(let i=0; i<ex.sets; i++) bubblesHtml += `<div class="set-bubble" onclick="this.classList.toggle('active')"></div>`;
+
+            const el = document.createElement('div');
+            el.className = 'card';
+            el.innerHTML = `
+                <div class="card-header">
+                    <div>
+                        <div class="ex-name">${ex.name}</div>
+                        <div><span class="ex-tag">${ex.type}</span> <span class="ex-tag" style="background:transparent; padding-left:0;">${ex.sets} Sets</span></div>
+                    </div>
+                    <div class="weight-control">
+                        <input type="number" id="val_${ex.id}" value="${state.weights[ex.id]}" step="5">
+                        <span class="unit">lbs</span>
+                    </div>
+                </div>
+                <div class="sets-container">${bubblesHtml}</div>
+            `;
+            list.appendChild(el);
+        });
+    }
+
+    async function finishWorkout() {
+        const btn = document.getElementById('finishBtn');
+        btn.innerText = "Syncing...";
+        btn.style.backgroundColor = "#007aff";
+
+        let logPayload = [];
+        const today = new Date().toLocaleDateString();
+
+        // Update State & Prepare Payload
+        config[state.currentRoutine].forEach(ex => {
+            const input = document.getElementById(`val_${ex.id}`);
+            const val = parseInt(input.value);
+            state.weights[ex.id] = val;
+            
+            logPayload.push({
+                date: today,
+                routine: state.currentRoutine,
+                exercise: ex.name,
+                weight: val
+            });
+
+            // Auto Progress (+5lbs) for Rack lifts only
+            if(ex.type === 'rack') state.weights[ex.id] += 5; 
+        });
+
+        // Toggle Routine & Save Local
+        state.currentRoutine = state.currentRoutine === 'A' ? 'B' : 'A';
+        localStorage.setItem('sf_workout_v4', JSON.stringify(state));
+
+        // Send to Google Sheets
+        if (GOOGLE_SCRIPT_URL.includes("script.google.com")) {
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(logPayload)
+                });
+                btn.innerText = "Success! Saved.";
+                btn.style.backgroundColor = "#34c759";
+            } catch (e) {
+                btn.innerText = "Saved Locally (Sync Failed)";
+                btn.style.backgroundColor = "#ff9500";
+            }
+        } else {
+             btn.innerText = "Saved Locally (No URL)";
+             btn.style.backgroundColor = "#34c759";
+        }
+
+        setTimeout(() => {
+            location.reload();
+            window.scrollTo(0,0);
+        }, 1500);
+    }
+
+    render();
+</script>
+</body>
+</html>
